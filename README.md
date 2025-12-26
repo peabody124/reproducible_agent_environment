@@ -10,6 +10,7 @@ Just as Docker standardizes runtime environments, RAE standardizes the context a
 - **Shared improvements** flow to all projects via sync
 - **Cross-agent compatibility** using skillz format
 - **Version-controlled workflows** that evolve with your practices
+- **Enforced guidelines** — not suggestions, requirements
 
 ## Installation
 
@@ -50,17 +51,20 @@ Copy `.devcontainer/devcontainer.json` to your project and reopen in container.
 | File | Purpose |
 |------|---------|
 | `coding-standards.md` | TDD mandate, DRY, fail-fast, configuration |
-| `python-standards.md` | ruff, typing, paths, project layout |
+| `python-standards.md` | ruff (120 chars), typing, paths, project layout |
+| `repo-structure.md` | Repository layout, pyproject.toml requirements |
 | `git-workflow.md` | Staging discipline, commit standards |
 | `anti-patterns.md` | "Slop" patterns to avoid |
 
 ### Skills (`skills/`)
 
-| Skill | Purpose |
-|-------|---------|
-| `deslop` | Clean AI-generated artifacts before commit |
-| `consult-guidelines` | Review relevant guidelines for task |
-| `config-improvement` | Propose improvements upstream |
+| Skill | Purpose | Activation |
+|-------|---------|------------|
+| `enforce-guidelines` | Ensures all work follows RAE guidelines | **Auto** — before any code task |
+| `scaffold-repo` | Initialize new repo with correct structure | Manual |
+| `deslop` | Clean AI-generated artifacts before commit | Manual or pre-commit |
+| `consult-guidelines` | Review relevant guidelines for task | Manual |
+| `config-improvement` | Propose improvements upstream | Manual |
 
 ### SOPs (`sops/`)
 
@@ -71,8 +75,31 @@ Copy `.devcontainer/devcontainer.json` to your project and reopen in container.
 
 ### Templates (`templates/`)
 
-- `pyproject.toml` — Standard Python project configuration
+- `pyproject.toml` — Standard Python project configuration (ruff 120 chars, proper deps)
 - `.gitignore` — Common ignores including scraps/
+
+## Key Standards
+
+### Python Projects
+
+- **Line length:** 120 characters (not 80, not 100)
+- **Layout:** `src/` directory with `tests/` mirroring structure
+- **Dependencies:** pytest, ruff in `[project.optional-dependencies] dev`, not main deps
+- **Optional variants:** OpenCV, PyTorch offer multiple distributions — use optional-dependencies
+
+```toml
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.8"]
+opencv-headless = ["opencv-python-headless>=4.0.0"]
+```
+
+### Workflow Enforcement
+
+RAE skills are inspired by [obra/superpowers](https://github.com/obra/superpowers) and [Gemini Conductor](https://github.com/gemini-cli-extensions/conductor):
+
+- **Guidelines are mandatory** — `enforce-guidelines` activates before any code task
+- **TDD is the default** — tests before implementation
+- **Verification required** — `ruff format && ruff check && pytest` before completion
 
 ## Architecture
 
@@ -138,11 +165,11 @@ Discovered a better pattern? Use the `/config-improvement` skill or:
 
 ## Research References
 
+- [obra/superpowers](https://github.com/obra/superpowers) — Skill-driven TDD enforcement
 - [Gemini Conductor](https://github.com/gemini-cli-extensions/conductor) — Context-driven development
 - [Strands Agent SOPs](https://github.com/strands-agents/agent-sop) — Markdown workflow format
 - [Skillz](https://github.com/intellectronica/skillz) — MCP server for cross-agent skills
 - [gemini-cli-skillz](https://github.com/intellectronica/gemini-cli-skillz) — Gemini extension for skillz
-- [opencode-conductor-bridge](https://github.com/bardusco/opencode-conductor-bridge) — Cross-platform Conductor workflows
 
 ## License
 

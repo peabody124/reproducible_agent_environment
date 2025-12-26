@@ -42,7 +42,7 @@ curl -fsSL "$RAE_REPO/$RAE_VERSION/GEMINI.md" -o .gemini_context.md 2>/dev/null 
 # 3. Update guidelines
 echo "==> Updating guidelines..."
 mkdir -p guidelines
-for guide in coding-standards python-standards git-workflow anti-patterns; do
+for guide in coding-standards python-standards repo-structure git-workflow anti-patterns; do
     curl -fsSL "$RAE_REPO/$RAE_VERSION/guidelines/${guide}.md" -o "guidelines/${guide}.md"
 done
 
@@ -51,10 +51,14 @@ echo "==> Updating skills in ~/.skillz..."
 mkdir -p ~/.skillz/deslop
 mkdir -p ~/.skillz/consult-guidelines
 mkdir -p ~/.skillz/config-improvement
+mkdir -p ~/.skillz/enforce-guidelines
+mkdir -p ~/.skillz/scaffold-repo
 
 curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/deslop/SKILL.md" -o ~/.skillz/deslop/SKILL.md
 curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/consult-guidelines/SKILL.md" -o ~/.skillz/consult-guidelines/SKILL.md
 curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/config-improvement/SKILL.md" -o ~/.skillz/config-improvement/SKILL.md
+curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/enforce-guidelines/SKILL.md" -o ~/.skillz/enforce-guidelines/SKILL.md
+curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/scaffold-repo/SKILL.md" -o ~/.skillz/scaffold-repo/SKILL.md
 
 # 5. Update version marker
 echo "==> Recording version..."

@@ -63,7 +63,7 @@ curl -fsSL "$RAE_REPO/$RAE_VERSION/GEMINI.md" -o .gemini_context.md 2>/dev/null 
 
 # Pull guidelines
 echo "==> Pulling guidelines..."
-for guide in coding-standards python-standards git-workflow anti-patterns; do
+for guide in coding-standards python-standards repo-structure git-workflow anti-patterns; do
     curl -fsSL "$RAE_REPO/$RAE_VERSION/guidelines/${guide}.md" -o "guidelines/${guide}.md"
 done
 
@@ -97,10 +97,14 @@ echo "==> Installing shared skills to ~/.skillz (Gemini compatibility)..."
 mkdir -p ~/.skillz/deslop
 mkdir -p ~/.skillz/consult-guidelines
 mkdir -p ~/.skillz/config-improvement
+mkdir -p ~/.skillz/enforce-guidelines
+mkdir -p ~/.skillz/scaffold-repo
 
 curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/deslop/SKILL.md" -o ~/.skillz/deslop/SKILL.md
 curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/consult-guidelines/SKILL.md" -o ~/.skillz/consult-guidelines/SKILL.md
 curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/config-improvement/SKILL.md" -o ~/.skillz/config-improvement/SKILL.md
+curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/enforce-guidelines/SKILL.md" -o ~/.skillz/enforce-guidelines/SKILL.md
+curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/scaffold-repo/SKILL.md" -o ~/.skillz/scaffold-repo/SKILL.md
 
 # 7. Install Gemini extensions (if gemini CLI is available)
 echo ""
