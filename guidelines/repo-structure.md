@@ -107,7 +107,7 @@ quote-style = "double"
 indent-style = "space"
 ```
 
-### Pytest Configuration
+### Pytest and Coverage Configuration
 
 ```toml
 [tool.pytest.ini_options]
@@ -117,7 +117,21 @@ addopts = [
     "-ra",
     "-q",
     "--strict-markers",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-branch",
 ]
+
+[tool.coverage.run]
+omit = [
+    "*/__init__.py",    # Often empty imports
+    "*/tests/*",        # Don't track coverage of the tests themselves
+    "*/config.py",      # Configuration often hard to test
+]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
 ```
 
 ## Directory Conventions
@@ -221,6 +235,7 @@ Before considering a repo properly structured:
 - [ ] src/ layout used for package code
 - [ ] tests/ directory exists with at least one test
 - [ ] ruff configured with line-length = 120
+- [ ] pytest configured with coverage (fail_under = 80)
 - [ ] Dev dependencies in optional-dependencies, not main
 - [ ] .gitignore includes all standard patterns
 - [ ] README.md describes the project

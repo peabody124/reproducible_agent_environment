@@ -80,7 +80,14 @@ packages = ["src/{package_name}"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-addopts = ["-ra", "-q", "--strict-markers"]
+addopts = ["-ra", "-q", "--strict-markers", "--cov=src", "--cov-report=term-missing", "--cov-branch"]
+
+[tool.coverage.run]
+omit = ["*/__init__.py", "*/tests/*", "*/config.py"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
 
 [tool.ruff]
 line-length = 120

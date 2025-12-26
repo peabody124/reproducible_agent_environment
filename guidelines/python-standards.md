@@ -125,9 +125,24 @@ def add_numbers(a: int, b: int) -> int:
 
 - MUST write tests before or alongside implementation (TDD preferred)
 - MUST run `pytest` before considering work complete
+- MUST maintain ≥80% code coverage (enforced by pyproject.toml)
 - Test files named `test_*.py`
 - Test functions named `test_*`
 - Use fixtures in `conftest.py` for shared setup
+
+**Coverage configuration** (in pyproject.toml):
+
+```toml
+[tool.pytest.ini_options]
+addopts = ["--cov=src", "--cov-report=term-missing", "--cov-branch"]
+
+[tool.coverage.run]
+omit = ["*/__init__.py", "*/tests/*", "*/config.py"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+```
 
 See `guidelines/coding-standards.md` for TDD requirements.
 
@@ -143,3 +158,4 @@ These patterns indicate non-compliance:
 | Hardcoded paths | Use pathlib and config |
 | pytest in main dependencies | Move to dev optional-dependencies |
 | Line length != 120 | Update ruff config |
+| Coverage < 80% | Add tests for uncovered code |

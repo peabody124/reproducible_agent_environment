@@ -44,7 +44,22 @@ addopts = [
     "-ra",
     "-q",
     "--strict-markers",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-branch",
 ]
+
+[tool.coverage.run]
+omit = [
+    "*/__init__.py",    # Often empty imports
+    "*/tests/*",        # Don't track coverage of the tests themselves
+    "*/config.py",      # Configuration often hard to test
+]
+
+[tool.coverage.report]
+# Fail if coverage drops below 80%
+fail_under = 80
+show_missing = true
 
 [tool.ruff]
 line-length = 120

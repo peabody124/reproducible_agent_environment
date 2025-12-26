@@ -41,6 +41,16 @@ Before responding to ANY code-related request:
 5. Proceed with task, citing guidelines when they influence decisions
 ```
 
+## Where to Find Guidelines
+
+Guidelines are bundled with the RAE plugin. Look for them in order of precedence:
+
+1. **Project-local:** `./guidelines/*.md` (if vendored)
+2. **Plugin bundle:** Bundled with RAE plugin installation
+3. **RAE repository:** https://github.com/peabody124/reproducible_agent_environment/tree/main/guidelines
+
+If you cannot find guidelines, check `.agent_setup_instructions/` for setup help.
+
 ## Guideline Mapping
 
 | Task Type | Required Guidelines |
@@ -84,8 +94,9 @@ These thoughts indicate you're trying to skip guidelines:
 ### Before Completing Work
 
 1. **Run all required checks**: `ruff format . && ruff check . && pytest`
-2. **Verify against checklist** from applicable guidelines
-3. **Confirm no violations** remain
+2. **Verify coverage**: pytest runs with `--cov` by default, coverage must be ≥80%
+3. **Verify against checklist** from applicable guidelines
+4. **Confirm no violations** remain
 
 ## Constraints
 
@@ -108,7 +119,7 @@ Before marking any code task complete:
 - [ ] Avoided all MUST NOT patterns
 - [ ] Ran `ruff format` on changed files
 - [ ] Ran `ruff check` with no errors
-- [ ] Ran `pytest` (if tests exist)
+- [ ] Ran `pytest` with coverage ≥80%
 - [ ] No anti-patterns from `anti-patterns.md`
 
 **Cannot check all boxes? Work is not complete.**
