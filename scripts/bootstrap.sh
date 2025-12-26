@@ -5,6 +5,7 @@ set -euo pipefail
 # This script sets up a project with RAE configurations
 
 RAE_REPO="${RAE_REPO:-https://raw.githubusercontent.com/peabody124/reproducible_agent_environment}"
+RAE_REPO_ID="${RAE_REPO_ID:-peabody124/reproducible_agent_environment}"
 RAE_VERSION="${RAE_VERSION:-main}"
 
 echo "╔════════════════════════════════════════════════════════════╗"
@@ -23,14 +24,38 @@ if command -v pip &> /dev/null; then
     pip install --quiet gemini-cli 2>/dev/null || echo "    Gemini CLI already installed or pip issue"
 fi
 
-# 2. Create directory structure
+# 2. Install RAE as Claude Code plugin (if claude CLI available)
+echo ""
+echo "==> Installing RAE as Claude Code plugin..."
+if command -v claude &> /dev/null; then
+    # Add this repo as a marketplace
+    if claude marketplace add "$RAE_REPO_ID" 2>/dev/null; then
+        echo "    ✓ RAE marketplace registered"
+    else
+        echo "    RAE marketplace already registered or unavailable"
+    fi
+
+    # Install the RAE plugin
+    if claude plugin install rae@reproducible_agent_environment --scope user 2>/dev/null; then
+        echo "    ✓ RAE plugin installed"
+    else
+        echo "    RAE plugin already installed or unavailable"
+    fi
+else
+    echo "    Claude Code CLI not found, skipping plugin install"
+    echo "    After installing Claude Code, run:"
+    echo "      /plugin marketplace add $RAE_REPO_ID"
+    echo "      /plugin install rae@reproducible_agent_environment"
+fi
+
+# 3. Create directory structure
 echo ""
 echo "==> Setting up directory structure..."
 mkdir -p .claude
 mkdir -p guidelines
 mkdir -p conductor
 
-# 3. Pull global agent instructions
+# 4. Pull global agent instructions
 echo ""
 echo "==> Pulling global agent instructions..."
 curl -fsSL "$RAE_REPO/$RAE_VERSION/CLAUDE.md" -o .claude/GLOBAL_INSTRUCTIONS.md
@@ -42,7 +67,7 @@ for guide in coding-standards python-standards git-workflow anti-patterns; do
     curl -fsSL "$RAE_REPO/$RAE_VERSION/guidelines/${guide}.md" -o "guidelines/${guide}.md"
 done
 
-# 4. Set up project CLAUDE.md if it doesn't exist
+# 5. Set up project CLAUDE.md if it doesn't exist
 if [ ! -f CLAUDE.md ]; then
     echo ""
     echo "==> Creating project CLAUDE.md..."
@@ -66,9 +91,9 @@ if [ ! -f CLAUDE.md ]; then
 HEREDOC
 fi
 
-# 5. Install shared skills to ~/.skillz
+# 6. Install shared skills to ~/.skillz (Gemini/MCP compatibility)
 echo ""
-echo "==> Installing shared skills..."
+echo "==> Installing shared skills to ~/.skillz (Gemini compatibility)..."
 mkdir -p ~/.skillz/deslop
 mkdir -p ~/.skillz/consult-guidelines
 mkdir -p ~/.skillz/config-improvement
@@ -77,7 +102,7 @@ curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/deslop/SKILL.md" -o ~/.skillz/deslop/S
 curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/consult-guidelines/SKILL.md" -o ~/.skillz/consult-guidelines/SKILL.md
 curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/config-improvement/SKILL.md" -o ~/.skillz/config-improvement/SKILL.md
 
-# 6. Install Gemini extensions (if gemini CLI is available)
+# 7. Install Gemini extensions (if gemini CLI is available)
 echo ""
 echo "==> Installing Gemini extensions..."
 if command -v gemini &> /dev/null; then
@@ -87,7 +112,7 @@ else
     echo "    Gemini CLI not found, skipping extension installation"
 fi
 
-# 7. Set up conductor context if not exists
+# 8. Set up conductor context if not exists
 if [ ! -f conductor/product.md ]; then
     echo ""
     echo "==> Setting up Conductor context..."
@@ -129,12 +154,12 @@ if [ ! -f conductor/workflow.md ]; then
 HEREDOC
 fi
 
-# 8. Record version
+# 9. Record version
 echo ""
 echo "==> Recording version..."
 echo "$RAE_VERSION" > .rae-version
 
-# 9. Add to .gitignore if not present
+# 10. Add to .gitignore if not present
 if [ -f .gitignore ]; then
     grep -q ".rae-version" .gitignore || echo ".rae-version" >> .gitignore
 else

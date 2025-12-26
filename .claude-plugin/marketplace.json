@@ -1,0 +1,13 @@
+{
+  "name": "rae-marketplace",
+  "description": "Reproducible Agent Environment plugins for consistent AI-assisted development",
+  "version": "1.0.0",
+  "plugins": [
+    {
+      "id": "rae",
+      "repository": "peabody124/reproducible_agent_environment",
+      "description": "Core RAE skills: deslop, consult-guidelines, config-improvement, and coding standards",
+      "keywords": ["standards", "tdd", "deslop", "guidelines", "quality"]
+    }
+  ]
+}

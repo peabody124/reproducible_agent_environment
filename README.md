@@ -11,15 +11,35 @@ Just as Docker standardizes runtime environments, RAE standardizes the context a
 - **Cross-agent compatibility** using skillz format
 - **Version-controlled workflows** that evolve with your practices
 
-## Quick Start
+## Installation
 
-### In a new project
+### Option 1: Claude Code Plugin (Recommended)
+
+Install RAE as a native Claude Code plugin:
+
+```bash
+# In Claude Code, add the marketplace
+/plugin marketplace add peabody124/reproducible_agent_environment
+
+# Install the RAE plugin
+/plugin install rae@reproducible_agent_environment
+```
+
+### Option 2: Full Bootstrap
+
+Sets up everything including guidelines, conductor context, and cross-agent compatibility:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/main/scripts/bootstrap.sh | bash
 ```
 
-### With devcontainers
+This will:
+- Install the RAE Claude Code plugin (if claude CLI available)
+- Set up guidelines/ directory
+- Configure Gemini CLI extensions
+- Install skills to ~/.skillz for MCP compatibility
+
+### Option 3: With Devcontainers
 
 Copy `.devcontainer/devcontainer.json` to your project and reopen in container.
 
@@ -78,11 +98,26 @@ Copy `.devcontainer/devcontainer.json` to your project and reopen in container.
 ./scripts/sync.sh v1.0.0
 ```
 
+Or update the Claude Code plugin:
+
+```bash
+# In Claude Code
+/plugin update rae@reproducible_agent_environment
+```
+
 ## Cross-Agent Compatibility
+
+RAE supports multiple installation methods:
+
+| Method | Target | Location |
+|--------|--------|----------|
+| Claude Code Plugin | Claude Code native | Managed by plugin system |
+| ~/.skillz/ | Gemini CLI, MCP servers | `~/.skillz/*/SKILL.md` |
+| ~/.claude/skills/ | Claude Code global | `~/.claude/skills/*/SKILL.md` |
 
 Skills use the [skillz](https://github.com/intellectronica/skillz) format with `SKILL.md` files, compatible with:
 
-- **Claude Code** — Native skill support
+- **Claude Code** — Native plugin support + skillz MCP
 - **Gemini CLI** — Via [gemini-cli-skillz](https://github.com/intellectronica/gemini-cli-skillz) extension
 
 ## Conductor Integration
