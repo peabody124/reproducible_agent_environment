@@ -95,20 +95,59 @@ else
     echo "    Gemini CLI not found, skipping extensions"
 fi
 
-# 6. Record version
+# 6. Install Python LSP (pyright) for code intelligence
+echo ""
+echo "==> Installing Python LSP (pyright)..."
+if command -v npm &> /dev/null; then
+    npm install -g pyright 2>/dev/null && echo "    ✓ pyright installed via npm" || echo "    pyright already installed or install failed"
+elif command -v pip &> /dev/null; then
+    pip install pyright 2>/dev/null && echo "    ✓ pyright installed via pip" || echo "    pyright already installed or install failed"
+else
+    echo "    Neither npm nor pip found, skipping pyright install"
+    echo "    Install manually: npm install -g pyright"
+fi
+
+# 7. Enable LSP tool in shell profile
+echo ""
+echo "==> Configuring ENABLE_LSP_TOOL..."
+SHELL_PROFILE=""
+if [ -f ~/.zshrc ]; then
+    SHELL_PROFILE=~/.zshrc
+elif [ -f ~/.bashrc ]; then
+    SHELL_PROFILE=~/.bashrc
+fi
+
+if [ -n "$SHELL_PROFILE" ]; then
+    if ! grep -q "ENABLE_LSP_TOOL" "$SHELL_PROFILE" 2>/dev/null; then
+        echo "" >> "$SHELL_PROFILE"
+        echo "# Claude Code LSP support (added by RAE)" >> "$SHELL_PROFILE"
+        echo "export ENABLE_LSP_TOOL=1" >> "$SHELL_PROFILE"
+        echo "    ✓ Added ENABLE_LSP_TOOL=1 to $SHELL_PROFILE"
+    else
+        echo "    ✓ ENABLE_LSP_TOOL already configured"
+    fi
+else
+    echo "    No shell profile found, add manually: export ENABLE_LSP_TOOL=1"
+fi
+
+# Also export for current session
+export ENABLE_LSP_TOOL=1
+
+# 8. Record version
 echo "$RAE_VERSION" > ~/.claude/rae/.version
 
 echo ""
 echo "╔════════════════════════════════════════════════════════════╗"
 echo "║  RAE User Installation Complete!                           ║"
 echo "║                                                            ║"
-echo "║  Installed to:                                             ║"
+echo "║  Installed:                                                ║"
 echo "║  - Claude plugin: rae@reproducible_agent_environment       ║"
 echo "║  - Skills: ~/.skillz/                                      ║"
 echo "║  - Guidelines: ~/.claude/rae/guidelines/                   ║"
+echo "║  - Python LSP: pyright (ENABLE_LSP_TOOL=1)                 ║"
 echo "║                                                            ║"
 echo "║  No files were added to the current directory.             ║"
 echo "║                                                            ║"
 echo "║  To create a new project: /scaffold-repo                   ║"
-echo "║  To verify setup: see .agent_setup_instructions/           ║"
+echo "║  Restart shell or run: source ~/.bashrc (or ~/.zshrc)      ║"
 echo "╚════════════════════════════════════════════════════════════╝"

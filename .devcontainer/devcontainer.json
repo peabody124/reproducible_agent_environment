@@ -44,7 +44,8 @@
   },
 
   "containerEnv": {
-    "RAE_VERSION": "main"
+    "RAE_VERSION": "main",
+    "ENABLE_LSP_TOOL": "1"
   },
 
   "remoteUser": "vscode"
