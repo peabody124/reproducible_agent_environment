@@ -23,7 +23,7 @@ Install RAE as a native Claude Code plugin — no repo pollution:
 /plugin marketplace add peabody124/reproducible_agent_environment
 
 # Install the RAE plugin
-/plugin install rae@reproducible_agent_environment
+/plugin install rae@rae-marketplace
 ```
 
 ### Option 2: User-Level Install (Dev Containers)
@@ -164,7 +164,7 @@ Or update the Claude Code plugin:
 
 ```bash
 # In Claude Code
-/plugin update rae@reproducible_agent_environment
+/plugin update rae@rae-marketplace
 ```
 
 ## Cross-Agent Compatibility
