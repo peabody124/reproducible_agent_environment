@@ -7,18 +7,22 @@
 
 ## Guidelines
 
-You MUST consult and follow these guidelines:
+You MUST consult and follow these guidelines. This is not optional.
 
 - `guidelines/coding-standards.md` — Core development practices (TDD, DRY, fail-fast)
-- `guidelines/python-standards.md` — Python-specific rules (ruff, typing, paths)
+- `guidelines/python-standards.md` — Python-specific rules (ruff 120 chars, typing, paths)
+- `guidelines/repo-structure.md` — Repository layout and pyproject.toml requirements
 - `guidelines/git-workflow.md` — Git discipline and commit standards
 - `guidelines/anti-patterns.md` — What to avoid ("slop")
 
+**Before any code task:** Consult applicable guidelines.
+
 ## Workflow
 
-- Before starting work: Review relevant guidelines for the task type
-- Before commits: Clean AI artifacts from code
-- When discovering improvements: Propose upstream to this repository
+1. Before starting work: Identify applicable guidelines for the task type
+2. During work: Cite guidelines when they influence decisions
+3. Before commits: Clean AI artifacts from code
+4. After completion: Verify with `ruff format . && ruff check . && pytest`
 
 ## Conductor Integration
 
@@ -31,13 +35,15 @@ This project supports Gemini Conductor for context-driven development:
 
 - Python with `uv` for package management
 - JAX/jaxtyping for numerical work
-- pytest for testing
+- pytest for testing (in dev dependencies, not main)
 - Strict `src/` and `tests/` layout
-- ruff for formatting and linting
+- ruff for formatting and linting (line-length = 120)
 
 ## Skills (via gemini-cli-skillz)
 
 Skills are available through the skillz extension:
+- `enforce-guidelines` — Ensures all work follows RAE guidelines
 - `deslop` — Clean AI-generated slop from staged changes
 - `consult-guidelines` — Review relevant guidelines for current task
+- `scaffold-repo` — Initialize a new repository with correct structure
 - `config-improvement` — Propose improvements to upstream RAE repo

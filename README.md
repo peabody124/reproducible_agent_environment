@@ -10,18 +10,63 @@ Just as Docker standardizes runtime environments, RAE standardizes the context a
 - **Shared improvements** flow to all projects via sync
 - **Cross-agent compatibility** using skillz format
 - **Version-controlled workflows** that evolve with your practices
+- **Enforced guidelines** — not suggestions, requirements
 
-## Quick Start
+## Installation
 
-### In a new project
+### Option 1: Claude Code Plugin (Recommended)
+
+Install RAE as a native Claude Code plugin — no repo pollution:
+
+```bash
+# In Claude Code, add the marketplace
+/plugin marketplace add peabody124/reproducible_agent_environment
+
+# Install the RAE plugin
+/plugin install rae@reproducible_agent_environment
+```
+
+### Option 2: User-Level Install (Dev Containers)
+
+Installs RAE to your home directory only — nothing added to repos:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/main/scripts/install-user.sh | bash
+```
+
+This installs to:
+- `~/.claude/rae/` — Guidelines cache
+- `~/.skillz/` — Skills for Gemini/MCP
+- Claude Code plugin system
+
+**Use this for dev containers** — add to `postCreateCommand`.
+
+### Option 3: Full Bootstrap (Your Own Repos)
+
+Sets up a repo with vendored guidelines and full RAE structure:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/main/scripts/bootstrap.sh | bash
 ```
 
-### With devcontainers
+This adds files to the repo:
+- `guidelines/` directory
+- `.claude/GLOBAL_INSTRUCTIONS.md`
+- `conductor/` directory
 
-Copy `.devcontainer/devcontainer.json` to your project and reopen in container.
+**Use this only for repos you own** where you want versioned guidelines.
+
+### Option 4: With Devcontainers
+
+Copy `.devcontainer/devcontainer.json` to your project:
+
+```json
+{
+  "postCreateCommand": "curl -fsSL .../install-user.sh | bash"
+}
+```
+
+The dev container auto-installs RAE at user level without modifying the project.
 
 ## What's Included
 
@@ -30,67 +75,90 @@ Copy `.devcontainer/devcontainer.json` to your project and reopen in container.
 | File | Purpose |
 |------|---------|
 | `coding-standards.md` | TDD mandate, DRY, fail-fast, configuration |
-| `python-standards.md` | ruff, typing, paths, project layout |
+| `python-standards.md` | ruff (120 chars), typing, coverage ≥80% |
+| `repo-structure.md` | Repository layout, pyproject.toml requirements |
 | `git-workflow.md` | Staging discipline, commit standards |
 | `anti-patterns.md` | "Slop" patterns to avoid |
 
 ### Skills (`skills/`)
 
-| Skill | Purpose |
-|-------|---------|
-| `deslop` | Clean AI-generated artifacts before commit |
-| `consult-guidelines` | Review relevant guidelines for task |
-| `config-improvement` | Propose improvements upstream |
+| Skill | Purpose | Activation |
+|-------|---------|------------|
+| `enforce-guidelines` | Ensures all work follows RAE guidelines | **Auto** — before any code task |
+| `scaffold-repo` | Initialize new repo with correct structure | Manual |
+| `deslop` | Clean AI-generated slop from code changes | Manual |
+| `consult-guidelines` | Review relevant guidelines for task | Manual |
+| `config-improvement` | Propose improvements upstream | Manual |
 
-### SOPs (`sops/`)
+### Agent Self-Setup (`.agent_setup_instructions/`)
 
-| SOP | Purpose |
-|-----|---------|
-| `propose-upstream.sop.md` | Workflow for contributing improvements |
-| `pre-commit-checklist.sop.md` | Quality checks before every commit |
+Instructions for agents to self-configure:
+- `setup-checklist.md` — Step-by-step plugin installation
+- `verify-installation.md` — How to confirm RAE works
+- `troubleshooting.md` — Common issues and fixes
 
-### Templates (`templates/`)
+## Key Standards
 
-- `pyproject.toml` — Standard Python project configuration
-- `.gitignore` — Common ignores including scraps/
+### Python Projects
 
-## Architecture
+- **Line length:** 120 characters (not 80, not 100)
+- **Coverage:** ≥80% required (enforced by pytest-cov)
+- **Layout:** `src/` directory with `tests/` mirroring structure
+- **Dependencies:** pytest, ruff in `[project.optional-dependencies] dev`
 
+```toml
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-cov>=4.0", "ruff>=0.8"]
+
+[tool.coverage.report]
+fail_under = 80
 ```
-┌─────────────────────────────────────────┐
-│  Project CLAUDE.md (project-specific)   │  ← Local overrides, commands
-├─────────────────────────────────────────┤
-│  .claude/GLOBAL_INSTRUCTIONS.md         │  ← Universal rules (synced)
-├─────────────────────────────────────────┤
-│  guidelines/*.md                        │  ← Detailed standards (synced)
-└─────────────────────────────────────────┘
-```
 
-**Upgrade flow:** Agents discovering improvements propose PRs upstream. After merge, all projects get the improvement via `sync.sh`.
+### Workflow Enforcement
+
+RAE skills are inspired by [obra/superpowers](https://github.com/obra/superpowers) and [Gemini Conductor](https://github.com/gemini-cli-extensions/conductor):
+
+- **Guidelines are mandatory** — `enforce-guidelines` activates before any code task
+- **TDD is the default** — tests before implementation
+- **Verification required** — `ruff format && ruff check && pytest` before completion
+
+## Scripts
+
+| Script | Purpose | Modifies Repo? |
+|--------|---------|----------------|
+| `install-user.sh` | User-level only installation | No |
+| `bootstrap.sh` | Full repo setup with vendored guidelines | Yes |
+| `sync.sh` | Update RAE to latest version | Depends |
 
 ## Upgrading
 
 ```bash
-# Latest
-./scripts/sync.sh
+# User-level: re-run install
+curl -fsSL .../install-user.sh | bash
 
-# Specific version
-./scripts/sync.sh v1.0.0
+# Repo-level: sync script
+./scripts/sync.sh
+```
+
+Or update the Claude Code plugin:
+
+```bash
+# In Claude Code
+/plugin update rae@reproducible_agent_environment
 ```
 
 ## Cross-Agent Compatibility
 
-Skills use the [skillz](https://github.com/intellectronica/skillz) format with `SKILL.md` files, compatible with:
+| Method | Target | Location |
+|--------|--------|----------|
+| Claude Code Plugin | Claude Code native | Managed by plugin |
+| `~/.skillz/` | Gemini CLI, MCP | `~/.skillz/*/SKILL.md` |
+| `~/.claude/rae/` | Guidelines cache | `~/.claude/rae/guidelines/` |
 
-- **Claude Code** — Native skill support
-- **Gemini CLI** — Via [gemini-cli-skillz](https://github.com/intellectronica/gemini-cli-skillz) extension
+Skills use the [skillz](https://github.com/intellectronica/skillz) format, compatible with:
 
-## Conductor Integration
-
-For Gemini CLI, [Conductor](https://github.com/gemini-cli-extensions/conductor) provides context-driven development. RAE bootstraps a `conductor/` directory with:
-
-- `product.md` — Product vision and goals
-- `workflow.md` — Development workflow preferences
+- **Claude Code** — Native plugin support
+- **Gemini CLI** — Via [gemini-cli-skillz](https://github.com/intellectronica/gemini-cli-skillz)
 
 ## Contributing
 
@@ -103,11 +171,9 @@ Discovered a better pattern? Use the `/config-improvement` skill or:
 
 ## Research References
 
+- [obra/superpowers](https://github.com/obra/superpowers) — Skill-driven TDD enforcement
 - [Gemini Conductor](https://github.com/gemini-cli-extensions/conductor) — Context-driven development
-- [Strands Agent SOPs](https://github.com/strands-agents/agent-sop) — Markdown workflow format
 - [Skillz](https://github.com/intellectronica/skillz) — MCP server for cross-agent skills
-- [gemini-cli-skillz](https://github.com/intellectronica/gemini-cli-skillz) — Gemini extension for skillz
-- [opencode-conductor-bridge](https://github.com/bardusco/opencode-conductor-bridge) — Cross-platform Conductor workflows
 
 ## License
 

@@ -15,10 +15,23 @@ authors = [
 dependencies = []
 
 [project.optional-dependencies]
+# Development tools - ALWAYS here, never in main dependencies
 dev = [
     "pytest>=8.0",
     "pytest-cov>=4.0",
     "ruff>=0.8",
+]
+
+# OpenCV variants - install ONE of these (or none if already installed)
+# Usage: uv pip install -e ".[opencv-headless]"
+opencv = ["opencv-python>=4.0.0"]
+opencv-headless = ["opencv-python-headless>=4.0.0"]
+opencv-contrib = ["opencv-contrib-python>=4.0.0"]
+
+# Jupyter notebooks
+notebooks = [
+    "jupyter>=1.0",
+    "ipykernel>=6.0",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -31,10 +44,25 @@ addopts = [
     "-ra",
     "-q",
     "--strict-markers",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-branch",
 ]
 
+[tool.coverage.run]
+omit = [
+    "*/__init__.py",    # Often empty imports
+    "*/tests/*",        # Don't track coverage of the tests themselves
+    "*/config.py",      # Configuration often hard to test
+]
+
+[tool.coverage.report]
+# Fail if coverage drops below 80%
+fail_under = 80
+show_missing = true
+
 [tool.ruff]
-line-length = 100
+line-length = 120
 target-version = "py311"
 src = ["src", "tests"]
 

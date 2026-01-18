@@ -6,7 +6,8 @@
     "source=${localEnv:HOME}/.anthropic,target=/home/vscode/.anthropic,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.gemini,target=/home/vscode/.gemini,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.config/gcloud,target=/home/vscode/.config/gcloud,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.skillz,target=/home/vscode/.skillz,type=bind,consistency=cached"
+    "source=${localEnv:HOME}/.skillz,target=/home/vscode/.skillz,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
   ],
 
   "features": {
@@ -17,7 +18,7 @@
     }
   },
 
-  "postCreateCommand": "bash scripts/bootstrap.sh",
+  "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/${RAE_VERSION:-main}/scripts/install-user.sh | bash",
 
   "customizations": {
     "vscode": {
@@ -37,13 +38,14 @@
         },
         "ruff.format.args": [],
         "ruff.lint.args": [],
-        "editor.rulers": [100]
+        "editor.rulers": [120]
       }
     }
   },
 
   "containerEnv": {
-    "RAE_VERSION": "main"
+    "RAE_VERSION": "main",
+    "ENABLE_LSP_TOOL": "1"
   },
 
   "remoteUser": "vscode"
