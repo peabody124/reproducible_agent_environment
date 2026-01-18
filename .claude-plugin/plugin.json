@@ -1,7 +1,7 @@
 {
   "name": "rae",
   "description": "Reproducible Agent Environment: coding standards, deslop, and quality enforcement skills for consistent AI-assisted development",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": {
     "name": "James Cotton"
   },
@@ -16,19 +16,5 @@
     "quality",
     "python",
     "best-practices"
-  ],
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/approve-bd.sh",
-            "timeout": 5
-          }
-        ]
-      }
-    ]
-  }
+  ]
 }
