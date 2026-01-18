@@ -1,10 +1,11 @@
 ---
 name: bead-driven-development
 description: >
-  Use when the user asks to "execute plan with beads", "implement with persistent tracking",
-  "bead-driven execution", "run plan with subagents", or wants planning + subagents + beads +
-  code review unified. Orchestrates writing-plans, executing-plans, and investigation skills
-  with beads integration for persistent cross-session tracking.
+  This skill should be used when the user asks to "execute plan with beads",
+  "implement with persistent tracking", "bead-driven execution", "run plan with subagents",
+  "track tasks across sessions", "use beads for planning", or wants planning + subagents +
+  beads + code review unified. Orchestrates writing-plans, executing-plans, and investigation
+  skills with beads integration for persistent cross-session tracking.
 ---
 
 # Bead-Driven Development

@@ -1,7 +1,7 @@
 {
   "name": "rae",
   "description": "Reproducible Agent Environment: coding standards, deslop, and quality enforcement skills for consistent AI-assisted development",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "author": {
     "name": "James Cotton"
   },
