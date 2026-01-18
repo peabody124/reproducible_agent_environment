@@ -89,6 +89,26 @@ The dev container auto-installs RAE at user level without modifying the project.
 | `deslop` | Clean AI-generated slop from code changes | Manual |
 | `consult-guidelines` | Review relevant guidelines for task | Manual |
 | `config-improvement` | Propose improvements upstream | Manual |
+| `bead-driven-development` | Orchestrate planning + execution with beads tracking | Manual |
+
+### Bead-Driven Development Prerequisites
+
+The `bead-driven-development` skill requires additional plugins:
+
+```bash
+# Install beads CLI and plugin
+curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+/plugin marketplace add steveyegge/beads
+/plugin install beads
+
+# Install superpowers (for writing-plans, executing-plans, investigation)
+/plugin marketplace add obra/superpowers-marketplace
+/plugin install superpowers@superpowers-marketplace
+
+# Initialize beads in your repo
+bd init
+```
 
 ### Agent Self-Setup (`.agent_setup_instructions/`)
 
