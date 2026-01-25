@@ -1,7 +1,7 @@
 {
   "name": "rae",
-  "description": "Reproducible Agent Environment: coding standards, deslop, and quality enforcement skills for consistent AI-assisted development",
-  "version": "1.0.3",
+  "description": "Reproducible Agent Environment: coding standards, deslop, quality enforcement, and datajoint-biomechanics-schema skills for consistent AI-assisted development",
+  "version": "1.0.4",
   "author": {
     "name": "James Cotton"
   },
@@ -15,6 +15,9 @@
     "guidelines",
     "quality",
     "python",
-    "best-practices"
+    "best-practices",
+    "datajoint",
+    "biomechanics",
+    "pose-estimation"
   ]
 }
