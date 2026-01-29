@@ -1,36 +1,70 @@
 ---
 name: pose-datajoint
-description: Use when writing Python code to query biomechanics DataJoint tables - counting videos/sessions, filtering by video_project or participant_id, fetching keypoints or kinematic reconstructions, understanding Session-Video relationships, or debugging query errors like missing method numbers
+description: Use when writing Python code to query biomechanics DataJoint tables - counting videos/sessions, filtering by video_project or participant_id/subject_id, fetching keypoints or kinematic reconstructions, understanding Session-Video relationships for both multi-camera and monocular pipelines
 ---
 
 # Pose DataJoint Query Reference
 
 ## Overview
 
-The biomechanics pipeline uses DataJoint across multiple packages. **Always import tables directly from their modules** - never use `create_virtual_module`. The key insight: videos and sessions live in different key spaces connected by bridge tables.
+The biomechanics pipeline has **two parallel systems**:
+1. **Multi-Camera (MMC)** - Lab-based, multiple synchronized cameras, uses `participant_id` (string)
+2. **Monocular (PBL)** - Phone-based portable recordings, uses `subject_id` (integer)
+
+Both produce kinematic outputs (qpos, joints, sites) but have different table hierarchies.
 
 ## Quick Reference: Package Imports
 
 ```python
-# Video and 2D/3D pose estimation
+# Shared: Video and 2D/3D pose estimation
 from pose_pipeline.pipeline import Video, VideoInfo, TopDownPerson, LiftingPerson
 
-# Multi-camera sessions and calibration
+# === MULTI-CAMERA (MMC) ===
 from multi_camera.datajoint.sessions import Session, Recording, Subject
-from multi_camera.datajoint.multi_camera_dj import MultiCameraRecording, SingleCameraVideo, PersonKeypointReconstruction
+from multi_camera.datajoint.multi_camera_dj import (
+    MultiCameraRecording, SingleCameraVideo, PersonKeypointReconstruction
+)
+from body_models.datajoint.kinematic_dj import KinematicReconstruction
 
-# Kinematic reconstruction (ALWAYS specify method!)
-from body_models.datajoint.kinematic_dj import KinematicReconstruction, KinematicReconstructionSettingsLookup
+# === MONOCULAR (PBL) ===
+from portable_biomechanics_sessions.emgimu_session import (
+    Subject as PBLSubject,      # Note: different from MMC Subject!
+    Session as PBLSession,      # Note: different from MMC Session!
+    FirebaseSession
+)
+from body_models.datajoint.monocular_dj import MonocularReconstruction
+```
 
-# Portable biomechanics (phone-based)
-from portable_biomechanics_sessions.emgimu_session import FirebaseSession, Subject as PBLSubject
+## Key Spaces (CRITICAL - Different Per Pipeline!)
+
+### Multi-Camera Key Space
+```python
+# Session: participant_id is STRING
+session_key = {'participant_id': '104', 'session_date': date(2023, 7, 21)}
+
+# Video: video_project + filename
+video_key = {'video_project': 'CLINIC_GAIT', 'filename': 'trial_001.27.mp4'}
+```
+
+### Monocular Key Space
+```python
+# Subject/Session: subject_id is INTEGER, project is part of key
+subject_key = {'subject_id': 301, 'project': 'HLL'}
+
+# Session adds timestamp
+session_key = {'subject_id': 301, 'project': 'HLL',
+               'session_start_time': datetime(2024, 1, 15, 10, 30, 0)}
+
+# AppVideo links to Video table
+app_video_key = {**session_key, 'app_start_time': ...,
+                 'video_project': 'HLL', 'filename': '0301_gait.mp4'}
 ```
 
 ## DataJoint Operators
 
 | Operator | Meaning | Example |
 |----------|---------|---------|
-| `&` | Restrict (filter) | `Video & 'video_project="CLINIC_GAIT"'` |
+| `&` | Restrict (filter) | `Video & 'video_project="HLL"'` |
 | `*` | Join tables | `Session * Recording * MultiCameraRecording` |
 | `-` | Set difference | `Video - TopDownPerson` (videos without poses) |
 | `.proj()` | Select attributes | `Table.proj('field1', 'field2')` |
@@ -39,127 +73,57 @@ from portable_biomechanics_sessions.emgimu_session import FirebaseSession, Subje
 
 ```python
 # fetch1() - Exactly ONE row (raises error if 0 or >1)
-timestamps, qpos = (KinematicReconstruction.Trial & key).fetch1('timestamps', 'qpos')
+timestamps, qpos = (Table & key).fetch1('timestamps', 'qpos')
 
 # fetch() - Multiple rows as arrays
-all_keys = (Session & restriction).fetch('KEY')  # List of dicts
-values = (Table & key).fetch('field_name')       # Numpy array
+all_keys = (Table & restriction).fetch('KEY')  # List of dicts
+values = (Table & key).fetch('field_name')     # Numpy array
 
 # fetch(as_dict=True) - Multiple rows as list of dicts
 records = (Table & key).fetch(as_dict=True)
-
-# With ordering (critical for multi-camera consistency)
-kp = (TopDownPerson & key).fetch('keypoints', order_by='camera_name')
 ```
 
-## Key Spaces (CRITICAL)
+---
 
-**Video key space:** `(video_project, filename)`
-```python
-video_key = {'video_project': 'CLINIC_GAIT', 'filename': 'trial_001.mp4'}
-```
+## Multi-Camera (MMC) Queries
 
-**Session key space:** `(participant_id, session_date)`
-```python
-from datetime import date
-session_key = {'participant_id': '104', 'session_date': date(2023, 7, 21)}
-```
-
-**TopDownPerson key space:** `(video_project, filename, video_subject_id, top_down_method)`
-```python
-pose_key = {**video_key, 'video_subject_id': 0, 'top_down_method': 0}
-```
-
-## Common Queries
-
-### Count Videos
+### Count Videos in MMC Project
 ```python
 from pose_pipeline.pipeline import Video
+from multi_camera.datajoint.multi_camera_dj import MultiCameraRecording, SingleCameraVideo
 
-# Total videos
-total = len(Video)
-
-# Videos in a project
-count = len(Video & 'video_project="CLINIC_GAIT"')
-
-# Multiple projects
-count = len(Video & 'video_project IN ("CLINIC_GAIT", "GAIT_CONTROLS")')
+# Videos linked to multi-camera recordings
+count = len(Video & SingleCameraVideo & (MultiCameraRecording & 'video_project="CLINIC_GAIT"'))
 ```
 
-### Count Sessions for a Participant
-```python
-from multi_camera.datajoint.sessions import Session
-
-# Session uses participant_id (NOT subject_id)
-count = len(Session & {'participant_id': '104'})
-
-# With date filter
-from datetime import date
-count = len(Session & {'participant_id': '104'} & f'session_date > "{date(2023,1,1)}"')
-```
-
-### Find Participants with a video_project
+### Count Sessions/Participants in MMC
 ```python
 from multi_camera.datajoint.sessions import Session, Recording
 from multi_camera.datajoint.multi_camera_dj import MultiCameraRecording
 import numpy as np
 
-# Navigate: Session -> Recording -> MultiCameraRecording (has video_project)
+# Sessions for a participant (participant_id is STRING!)
+count = len(Session & {'participant_id': '104'})
+
+# Unique participants in a project
 participants = np.unique(
     (Session & (Recording & (MultiCameraRecording & 'video_project="CLINIC_GAIT"'))).fetch('participant_id')
 )
+print(f"Participants: {len(participants)}")
 ```
 
-### Get 2D Keypoints
-```python
-from pose_pipeline.pipeline import TopDownPerson, Video
-
-# TopDownPerson contains 2D keypoints (NOT Keypoints2D!)
-key = {
-    'video_project': 'CLINIC_GAIT',
-    'filename': 'trial_001.mp4',
-    'video_subject_id': 0,    # Person index in video
-    'top_down_method': 0      # 0=MMPose, see TopDownMethodLookup
-}
-keypoints = (TopDownPerson & key).fetch1('keypoints')  # Shape: (T, N_joints, 3)
-```
-
-### Get 3D Lifted Keypoints (Monocular)
-```python
-from pose_pipeline.pipeline import LiftingPerson
-
-key = {**pose_key, 'lifting_method': 1}  # 1=VideoPose3D
-keypoints_3d = (LiftingPerson & key).fetch1('keypoints_3d')  # Shape: (T, N_joints, 4)
-```
-
-### Get 3D Triangulated Keypoints (Multi-Camera)
-```python
-from multi_camera.datajoint.multi_camera_dj import PersonKeypointReconstruction
-
-# PersonKeypointReconstruction = triangulated 3D from multiple cameras
-# LiftingPerson = lifted 3D from single camera (less accurate)
-key = {
-    'video_project': 'CLINIC_GAIT',
-    'video_base_filename': 'trial_20231215_143022',
-    'reconstruction_method': 0  # 0=Robust Triangulation
-}
-keypoints3d = (PersonKeypointReconstruction & key).fetch1('keypoints3d')
-# Shape: (T, N_joints, 4) - last dim is [x, y, z, confidence], units: mm
-```
-
-### Get Kinematic Reconstruction (MUST SPECIFY METHOD!)
+### Get MMC Kinematic Reconstruction
 ```python
 from body_models.datajoint.kinematic_dj import KinematicReconstruction
 from datetime import date
 
-# CRITICAL: Always include kinematic_reconstruction_settings_num
+# CRITICAL: Always specify kinematic_reconstruction_settings_num!
 key = {
     'participant_id': '102',
     'session_date': date(2023, 7, 21),
     'kinematic_reconstruction_settings_num': 137  # REQUIRED!
 }
 
-# Get from Trial part table
 timestamps, qpos, joints, sites = (KinematicReconstruction.Trial & key).fetch1(
     'timestamps', 'qpos', 'joints', 'sites'
 )
@@ -168,91 +132,177 @@ timestamps, qpos, joints, sites = (KinematicReconstruction.Trial & key).fetch1(
 # sites: (T, N_sites, 3) marker positions in meters
 ```
 
-### List Available video_projects
+### Get 3D Triangulated Keypoints (MMC)
 ```python
-from multi_camera.datajoint.multi_camera_dj import MultiCameraRecording
-import numpy as np
+from multi_camera.datajoint.multi_camera_dj import PersonKeypointReconstruction
 
-projects = np.unique(MultiCameraRecording.fetch('video_project'))
+key = {
+    'video_project': 'CLINIC_GAIT',
+    'video_base_filename': 'trial_20231215_143022',
+    'reconstruction_method': 0  # 0=Robust Triangulation
+}
+keypoints3d = (PersonKeypointReconstruction & key).fetch1('keypoints3d')
+# Shape: (T, N_joints, 4) - [x, y, z, confidence], units: mm
 ```
 
-### Get ALL Trials in a Session (Batch Query)
-```python
-from body_models.datajoint.kinematic_dj import KinematicReconstruction
-from datetime import date
+---
 
-session_key = {
-    'participant_id': '102',
-    'session_date': date(2023, 7, 21),
-    'kinematic_reconstruction_settings_num': 137
+## Monocular (PBL) Queries
+
+### Count Videos in Monocular Project
+```python
+from portable_biomechanics_sessions.emgimu_session import FirebaseSession
+
+# AppVideo is a Part table of FirebaseSession
+count = len(FirebaseSession.AppVideo & {'video_project': 'HLL'})
+print(f"HLL monocular videos: {count}")
+```
+
+### Count Subjects in Monocular Project
+```python
+from portable_biomechanics_sessions.emgimu_session import FirebaseSession
+import numpy as np
+
+# Get unique subject_ids for a project
+subject_ids = np.unique(
+    (FirebaseSession.AppVideo & {'video_project': 'HLL'}).fetch('subject_id')
+)
+print(f"Subjects with HLL videos: {len(subject_ids)}")
+```
+
+### Count Monocular Videos Processed with Kinematic Reconstruction
+```python
+from portable_biomechanics_sessions.emgimu_session import FirebaseSession
+from body_models.datajoint.monocular_dj import MonocularReconstruction
+
+# Videos that have monocular reconstruction
+processed = len(
+    FirebaseSession.AppVideo
+    & (MonocularReconstruction.Trial & {'video_project': 'HLL'})
+)
+print(f"HLL videos with monocular reconstruction: {processed}")
+
+# Videos NOT yet processed
+all_videos = FirebaseSession.AppVideo & {'video_project': 'HLL'}
+unprocessed = len(all_videos - MonocularReconstruction.Trial)
+print(f"HLL videos needing processing: {unprocessed}")
+```
+
+### Get Monocular Kinematic Reconstruction
+```python
+from body_models.datajoint.monocular_dj import MonocularReconstruction
+from datetime import datetime
+
+# Monocular uses subject_id (INTEGER) and project
+key = {
+    'subject_id': 301,
+    'project': 'HLL',
+    'session_start_time': datetime(2024, 1, 15, 10, 30, 0),
+    'monocular_reconstruction_settings_num': 1  # Specify method
 }
 
-# Get all trial keys for this session
-trial_keys = (KinematicReconstruction.Trial & session_key).fetch('KEY')
+# Get all trials for this session
+trial_keys = (MonocularReconstruction.Trial & key).fetch('KEY')
 
-# Iterate over trials
 for trial_key in trial_keys:
-    qpos = (KinematicReconstruction.Trial & trial_key).fetch1('qpos')
-    print(f"Trial: {trial_key}, qpos shape: {qpos.shape}")
+    timestamps, qpos, joints, sites, rnc = (MonocularReconstruction.Trial & trial_key).fetch1(
+        'timestamps', 'qpos', 'joints', 'sites', 'rnc'
+    )
+    # qpos: (T, 40) joint angles - monocular has 40 DOF (vs 41 for MMC)
+    # rnc: (T, 3) camera rotation vector from phone attitude
+    print(f"Video: {trial_key['filename']}, frames: {len(timestamps)}")
 ```
 
-### Count Videos per Project (Aggregation)
+### List Monocular Projects
+```python
+from portable_biomechanics_sessions.emgimu_session import FirebaseSession
+import numpy as np
+
+projects = np.unique(FirebaseSession.AppVideo.fetch('video_project'))
+print(f"Monocular projects: {projects}")
+```
+
+---
+
+## Shared Queries (Work for Both Pipelines)
+
+### Get 2D Keypoints
+```python
+from pose_pipeline.pipeline import TopDownPerson
+
+key = {
+    'video_project': 'HLL',  # Works for any project
+    'filename': 'trial_001.mp4',
+    'video_subject_id': 0,
+    'top_down_method': 0  # 0=MMPose
+}
+keypoints = (TopDownPerson & key).fetch1('keypoints')  # Shape: (T, N_joints, 3)
+```
+
+### Get 3D Lifted Keypoints
+```python
+from pose_pipeline.pipeline import LiftingPerson
+
+key = {**video_key, 'video_subject_id': 0, 'top_down_method': 0, 'lifting_method': 1}
+keypoints_3d = (LiftingPerson & key).fetch1('keypoints_3d')  # Shape: (T, N_joints, 4)
+```
+
+### Count All Videos by Project
 ```python
 from pose_pipeline.pipeline import Video
-import numpy as np
 from collections import Counter
 
 projects = Video.fetch('video_project')
-counts = Counter(projects)
-for project, count in counts.items():
+for project, count in Counter(projects).items():
     print(f"{project}: {count} videos")
 ```
 
-### Find Videos Missing Processing
-```python
-from pose_pipeline.pipeline import Video, TopDownPerson
-
-# Videos without 2D pose estimation
-missing_poses = Video - TopDownPerson
-print(f"Videos needing pose estimation: {len(missing_poses)}")
-
-# Get their keys
-missing_keys = missing_poses.fetch('KEY')
-```
+---
 
 ## Table Relationships
 
+### Multi-Camera Hierarchy
 ```
-Session (participant_id, session_date)
-    -> Recording -> MultiCameraRecording (video_project, video_base_filename)
-                        -> SingleCameraVideo -> Video (video_project, filename)
-                        |                          -> VideoInfo (fps, timestamps)
-                        |                          -> TopDownPerson (2D keypoints)
-                        |                              -> LiftingPerson (lifted 3D)
-                        |
-                        -> CalibratedRecording -> Calibration
-                        -> PersonKeypointReconstruction (triangulated 3D keypoints)
-
-    -> SessionCalibration.Grouping
-        -> KinematicReconstruction (body_scale, calibration)
-            -> KinematicReconstruction.Trial (qpos, joints, sites)
+Subject (participant_id)  ← STRING
+    -> Session (participant_id, session_date)
+        -> Recording -> MultiCameraRecording (video_project)
+                            -> SingleCameraVideo -> Video
+                            -> PersonKeypointReconstruction (3D triangulated)
+        -> SessionCalibration.Grouping
+            -> KinematicReconstruction (method 137)
+                -> KinematicReconstruction.Trial (qpos, joints, sites)
 ```
 
-**Two paths to 3D keypoints:**
-- `LiftingPerson` - 2D→3D lifting from single camera (monocular)
-- `PersonKeypointReconstruction` - Triangulation from multiple cameras (more accurate)
+### Monocular Hierarchy
+```
+Subject (subject_id, project)  ← INTEGER + project
+    -> Session (subject_id, project, session_start_time)
+        -> FirebaseSession
+            -> FirebaseSession.AppVideo -> Video
+            -> FirebaseSession.PhoneAttitude (phone orientation)
+            -> FirebaseSession.Gyro/Accel/Mag (IMU data)
+
+MonocularReconstruction (subject_id, project, session_start_time, method)
+    -> MonocularReconstruction.Trial (qpos, joints, sites, rnc)
+        -> FirebaseSession.AppVideo (links video)
+```
+
+---
 
 ## Common Mistakes
 
 | Mistake | Fix |
 |---------|-----|
-| `{'subject_id': 104}` | Use `{'participant_id': '104'}` (string!) |
+| MMC: `{'subject_id': 104}` | Use `{'participant_id': '104'}` (string!) |
+| PBL: `{'participant_id': '301'}` | Use `{'subject_id': 301}` (integer!) |
 | `Keypoints2D` table | Use `TopDownPerson` for 2D keypoints |
 | Missing method for KinematicReconstruction | Add `'kinematic_reconstruction_settings_num': 137` |
+| Missing method for MonocularReconstruction | Add `'monocular_reconstruction_settings_num': 1` |
 | `fetch(unique=True)` | Use `np.unique(table.fetch('field'))` |
-| `fetch(as_pandas=True)` | Use `fetch(as_dict=True)` or `pd.DataFrame(fetch())` |
-| `create_virtual_module()` | Direct import: `from pose_pipeline.pipeline import Video` |
-| Getting subject from Video | Video has no subject; join through Session -> Recording -> MultiCameraRecording |
+| `create_virtual_module()` | Direct import from modules |
+| Mixing MMC Session with PBL Session | Import with alias: `Session as PBLSession` |
+
+---
 
 ## Method Numbers Reference
 
@@ -260,16 +310,19 @@ Session (participant_id, session_date)
 |----------|-------|--------------|---------|
 | 2D Pose | TopDownPerson | `top_down_method` | 0 (MMPose) |
 | 3D Lifting | LiftingPerson | `lifting_method` | 1 (VideoPose3D) |
-| 3D Triangulation | PersonKeypointReconstruction | `reconstruction_method` | 0 (Robust Triangulation) |
+| 3D Triangulation (MMC) | PersonKeypointReconstruction | `reconstruction_method` | 0 |
 | Multi-Camera Kinematic | KinematicReconstruction | `kinematic_reconstruction_settings_num` | **137** |
-| Monocular Kinematic | MonocularReconstruction | `monocular_reconstruction_settings_num` | 1 |
+| Monocular Kinematic | MonocularReconstruction | `monocular_reconstruction_settings_num` | **1** |
 
-## Files to Explore for More Details
+---
+
+## Files to Explore
 
 | Task | File |
 |------|------|
-| Video/TopDownPerson schemas | `PosePipeline/pose_pipeline/pipeline.py` |
-| Session/Recording schemas | `MultiCameraTracking/multi_camera/datajoint/sessions.py` |
-| MultiCameraRecording schemas | `MultiCameraTracking/multi_camera/datajoint/multi_camera_dj.py` |
-| KinematicReconstruction | `BodyModels/body_models/datajoint/kinematic_dj.py` |
-| DataJoint principles | `PipelineOrchestrator/docs/datajoint_principles.md` |
+| Video/TopDownPerson | `PosePipeline/pose_pipeline/pipeline.py` |
+| MMC Session/Recording | `MultiCameraTracking/multi_camera/datajoint/sessions.py` |
+| MMC MultiCameraRecording | `MultiCameraTracking/multi_camera/datajoint/multi_camera_dj.py` |
+| MMC KinematicReconstruction | `BodyModels/body_models/datajoint/kinematic_dj.py` |
+| PBL Subject/Session/FirebaseSession | `PortableBiomechanicsSessions/portable_biomechanics_sessions/emgimu_session.py` |
+| PBL MonocularReconstruction | `BodyModels/body_models/datajoint/monocular_dj.py` |
