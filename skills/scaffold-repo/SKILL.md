@@ -219,31 +219,30 @@ pytest
 
 ### 9. (Optional) Add Devcontainer
 
-If the user wants devcontainer support, create `.devcontainer/devcontainer.json` (no Dockerfile needed):
+If the user wants devcontainer support, ask which template to use:
 
-```json
-{
-  "name": "{name}",
-  "image": "mcr.microsoft.com/devcontainers/python:3.11",
-  "mounts": [
-    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
-  ],
-  "features": {
-    "ghcr.io/devcontainers/features/github-cli:1": {}
-  },
-  "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/main/scripts/install-user.sh | bash",
-  "containerEnv": {
-    "RAE_VERSION": "main",
-    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",
-    "ENABLE_LSP_TOOL": "1"
-  },
-  "remoteUser": "vscode"
-}
-```
+**Option 1: CPU-only (lightweight, faster startup)**
+- Copy from `templates/devcontainer-cpu/devcontainer.json`
+- Uses `mcr.microsoft.com/devcontainers/python:3.11`
+- No GPU support, minimal dependencies
+- Best for: web apps, APIs, general Python development
 
-The `postCreateCommand` runs `install-user.sh` which installs Claude Code, pyright, RAE plugin, and the full recommended plugin suite.
+**Option 2: GPU-enabled (CUDA + cuDNN for ML/CV)**
+- Copy from `templates/devcontainer-gpu/devcontainer.json`
+- Uses `nvidia/cuda:12.6.0-cudnn-devel-ubuntu24.04`
+- Includes: GPU access, OpenCV dependencies, git-lfs, Jupyter
+- Requires: `--env-file .env` in project root
+- Best for: machine learning, computer vision, biomechanics
 
-**Note:** Ensure `~/.claude` exists on the host before starting the devcontainer: `mkdir -p ~/.claude`
+Both templates:
+- Install Claude Code, pyright, RAE plugin, and full plugin suite via `postCreateCommand`
+- Mount `~/.claude` for config persistence
+- Configure VSCode with ruff, Python testing, 120-char rulers
+- No Dockerfile needed - everything via features and install script
+
+**Note:** Ensure `~/.claude` exists on the host before starting: `mkdir -p ~/.claude`
+
+**GPU template also requires:** Create a `.env` file in project root for secrets (gitignored)
 
 ## Adding Optional Dependencies
 

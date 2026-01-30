@@ -1,0 +1,46 @@
+{
+  "name": "Python Development (CPU)",
+
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+
+  "mounts": [
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
+  ],
+
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+
+  "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/${RAE_VERSION:-main}/scripts/install-user.sh | bash",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "tamasfe.even-better-toml",
+        "github.copilot"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.formatting.provider": "none",
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.formatOnSave": true
+        },
+        "ruff.format.args": [],
+        "ruff.lint.args": [],
+        "editor.rulers": [120]
+      }
+    }
+  },
+
+  "containerEnv": {
+    "RAE_VERSION": "main",
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",
+    "ENABLE_LSP_TOOL": "1"
+  },
+
+  "remoteUser": "vscode"
+}
