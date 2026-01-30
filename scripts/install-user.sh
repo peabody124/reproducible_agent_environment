@@ -17,7 +17,7 @@ echo "╔═══════════════════════�
 echo "║  RAE User-Level Installation                               ║"
 echo "║  Version: $RAE_VERSION                                     ║"
 echo "║                                                            ║"
-echo "║  This installs to ~/.claude/ and ~/.skillz/ only           ║"
+echo "║  This installs to ~/.claude/ only                           ║"
 echo "║  No files will be added to the current directory           ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 
@@ -57,23 +57,7 @@ else
     echo "      /plugin install rae@reproducible_agent_environment"
 fi
 
-# 3. Install skills to ~/.skillz (Gemini/MCP compatibility)
-echo ""
-echo "==> Installing skills to ~/.skillz..."
-mkdir -p ~/.skillz/deslop
-mkdir -p ~/.skillz/consult-guidelines
-mkdir -p ~/.skillz/config-improvement
-mkdir -p ~/.skillz/enforce-guidelines
-mkdir -p ~/.skillz/scaffold-repo
-
-curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/deslop/SKILL.md" -o ~/.skillz/deslop/SKILL.md
-curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/consult-guidelines/SKILL.md" -o ~/.skillz/consult-guidelines/SKILL.md
-curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/config-improvement/SKILL.md" -o ~/.skillz/config-improvement/SKILL.md
-curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/enforce-guidelines/SKILL.md" -o ~/.skillz/enforce-guidelines/SKILL.md
-curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/scaffold-repo/SKILL.md" -o ~/.skillz/scaffold-repo/SKILL.md
-echo "    ✓ Skills installed to ~/.skillz/"
-
-# 4. Cache guidelines in ~/.claude/rae/ for reference
+# 3. Cache guidelines in ~/.claude/rae/ for reference
 echo ""
 echo "==> Caching guidelines to ~/.claude/rae/..."
 mkdir -p ~/.claude/rae/guidelines
@@ -85,17 +69,7 @@ done
 curl -fsSL "$RAE_REPO/$RAE_VERSION/templates/pyproject.toml" -o ~/.claude/rae/templates/pyproject.toml
 echo "    ✓ Guidelines cached to ~/.claude/rae/"
 
-# 5. Install Gemini extensions (if available)
-echo ""
-echo "==> Checking Gemini CLI..."
-if command -v gemini &> /dev/null; then
-    gemini extensions install gemini-cli-extensions/conductor --auto-update 2>/dev/null || echo "    Conductor already installed or unavailable"
-    gemini extensions install intellectronica/gemini-cli-skillz 2>/dev/null || echo "    gemini-cli-skillz already installed or unavailable"
-else
-    echo "    Gemini CLI not found, skipping extensions"
-fi
-
-# 6. Install Python LSP (pyright) for code intelligence
+# 4. Install Python LSP (pyright) for code intelligence
 echo ""
 echo "==> Installing Python LSP (pyright)..."
 if command -v npm &> /dev/null; then
@@ -107,7 +81,7 @@ else
     echo "    Install manually: npm install -g pyright"
 fi
 
-# 7. Enable LSP tool in shell profile
+# 5. Enable LSP tool in shell profile
 echo ""
 echo "==> Configuring ENABLE_LSP_TOOL..."
 SHELL_PROFILE=""
@@ -133,7 +107,7 @@ fi
 # Also export for current session
 export ENABLE_LSP_TOOL=1
 
-# 8. Record version
+# 6. Record version
 echo "$RAE_VERSION" > ~/.claude/rae/.version
 
 echo ""
@@ -142,7 +116,6 @@ echo "║  RAE User Installation Complete!                           ║"
 echo "║                                                            ║"
 echo "║  Installed:                                                ║"
 echo "║  - Claude plugin: rae@reproducible_agent_environment       ║"
-echo "║  - Skills: ~/.skillz/                                      ║"
 echo "║  - Guidelines: ~/.claude/rae/guidelines/                   ║"
 echo "║  - Python LSP: pyright (ENABLE_LSP_TOOL=1)                 ║"
 echo "║                                                            ║"

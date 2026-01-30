@@ -2,13 +2,13 @@
 
 ## Overview
 
-RAE provides standardized AI agent configurations across projects. It supports both Claude Code and Gemini CLI with shared skills, SOPs, and coding standards.
+RAE provides standardized AI agent configurations across projects. It supports Claude Code with shared skills, SOPs, and coding standards.
 
 ## Prerequisites
 
 - Docker (for devcontainers)
 - VS Code with Remote Containers extension
-- Claude Code CLI and/or Gemini CLI credentials configured locally
+- Claude Code CLI credentials configured locally
 
 ## Quick Start
 
@@ -27,7 +27,6 @@ curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_envir
    - Global agent instructions
    - Guidelines directory
    - Shared skills
-   - Conductor context
 
 ### Option 2: Manual Setup
 
@@ -55,9 +54,6 @@ your-project/
 │   ├── python-standards.md       # Python-specific rules
 │   ├── git-workflow.md           # Git discipline
 │   └── anti-patterns.md          # "Slop" to avoid
-├── conductor/
-│   ├── product.md                # Product context for Conductor
-│   └── workflow.md               # Workflow preferences
 └── .rae-version                  # Current RAE version
 ```
 
@@ -103,30 +99,13 @@ because the schema is not guaranteed.
 
 ## Available Skills
 
-Skills are installed to `~/.skillz/` and work with both Claude and Gemini (via gemini-cli-skillz):
+Skills are available through the Claude Code plugin:
 
 | Skill | Description |
 |-------|-------------|
 | `/deslop` | Clean AI-generated slop from staged changes |
 | `/consult-guidelines` | Review relevant guidelines for current task |
 | `/config-improvement` | Propose improvements to upstream RAE |
-
-## Conductor Integration
-
-For Gemini CLI, Conductor provides context-driven development:
-
-```bash
-# Set up project context
-conductor setup
-
-# Create a new feature track
-conductor new track "Add user authentication"
-
-# Implement from approved plan
-conductor implement
-```
-
-The `conductor/` directory stores your project context that both agents can reference.
 
 ## Proposing Improvements
 
@@ -147,18 +126,11 @@ Ensure your local credential directories exist and have correct permissions:
 
 ```bash
 ls -la ~/.anthropic
-ls -la ~/.gemini
 ```
 
 The devcontainer mounts these directories read-only.
 
 ### Skills not loading
-
-Verify skills are installed:
-
-```bash
-ls ~/.skillz/
-```
 
 Re-run bootstrap if needed:
 

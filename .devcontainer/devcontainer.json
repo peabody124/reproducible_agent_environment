@@ -4,9 +4,6 @@
 
   "mounts": [
     "source=${localEnv:HOME}/.anthropic,target=/home/vscode/.anthropic,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.gemini,target=/home/vscode/.gemini,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.config/gcloud,target=/home/vscode/.config/gcloud,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.skillz,target=/home/vscode/.skillz,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
   ],
 

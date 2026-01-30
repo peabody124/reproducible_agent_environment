@@ -1,14 +1,13 @@
 # Reproducible Agent Environment (RAE)
 
-Standardized AI agent configurations for consistent development across projects. Supports both **Claude Code** and **Gemini CLI** with shared skills, SOPs, and coding standards.
+Standardized AI agent configurations for consistent development across projects. Provides shared skills, SOPs, and coding standards for **Claude Code**.
 
 ## Why RAE?
 
 Just as Docker standardizes runtime environments, RAE standardizes the context and tooling for AI agents working on your code. This means:
 
-- **Consistent behavior** across projects and agents
+- **Consistent behavior** across projects
 - **Shared improvements** flow to all projects via sync
-- **Cross-agent compatibility** using skillz format
 - **Version-controlled workflows** that evolve with your practices
 - **Enforced guidelines** — not suggestions, requirements
 
@@ -36,7 +35,6 @@ curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_envir
 
 This installs to:
 - `~/.claude/rae/` — Guidelines cache
-- `~/.skillz/` — Skills for Gemini/MCP
 - Claude Code plugin system
 
 **Use this for dev containers** — add to `postCreateCommand`.
@@ -52,7 +50,6 @@ curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_envir
 This adds files to the repo:
 - `guidelines/` directory
 - `.claude/GLOBAL_INSTRUCTIONS.md`
-- `conductor/` directory
 
 **Use this only for repos you own** where you want versioned guidelines.
 
@@ -136,7 +133,7 @@ fail_under = 80
 
 ### Workflow Enforcement
 
-RAE skills are inspired by [obra/superpowers](https://github.com/obra/superpowers) and [Gemini Conductor](https://github.com/gemini-cli-extensions/conductor):
+RAE skills are inspired by [obra/superpowers](https://github.com/obra/superpowers):
 
 - **Guidelines are mandatory** — `enforce-guidelines` activates before any code task
 - **TDD is the default** — tests before implementation
@@ -167,19 +164,6 @@ Or update the Claude Code plugin:
 /plugin update rae@rae-marketplace
 ```
 
-## Cross-Agent Compatibility
-
-| Method | Target | Location |
-|--------|--------|----------|
-| Claude Code Plugin | Claude Code native | Managed by plugin |
-| `~/.skillz/` | Gemini CLI, MCP | `~/.skillz/*/SKILL.md` |
-| `~/.claude/rae/` | Guidelines cache | `~/.claude/rae/guidelines/` |
-
-Skills use the [skillz](https://github.com/intellectronica/skillz) format, compatible with:
-
-- **Claude Code** — Native plugin support
-- **Gemini CLI** — Via [gemini-cli-skillz](https://github.com/intellectronica/gemini-cli-skillz)
-
 ## Contributing
 
 Discovered a better pattern? Use the `/config-improvement` skill or:
@@ -192,9 +176,6 @@ Discovered a better pattern? Use the `/config-improvement` skill or:
 ## Research References
 
 - [obra/superpowers](https://github.com/obra/superpowers) — Skill-driven TDD enforcement
-- [Gemini Conductor](https://github.com/gemini-cli-extensions/conductor) — Context-driven development
-- [Skillz](https://github.com/intellectronica/skillz) — MCP server for cross-agent skills
-
 ## License
 
 MIT

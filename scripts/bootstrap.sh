@@ -20,10 +20,6 @@ if command -v npm &> /dev/null; then
     npm install -g @anthropic-ai/claude-code 2>/dev/null || echo "    Claude Code already installed or npm not available"
 fi
 
-if command -v pip &> /dev/null; then
-    pip install --quiet gemini-cli 2>/dev/null || echo "    Gemini CLI already installed or pip issue"
-fi
-
 # 2. Install RAE as Claude Code plugin (if claude CLI available)
 echo ""
 echo "==> Installing RAE as Claude Code plugin..."
@@ -53,13 +49,11 @@ echo ""
 echo "==> Setting up directory structure..."
 mkdir -p .claude
 mkdir -p guidelines
-mkdir -p conductor
 
 # 4. Pull global agent instructions
 echo ""
 echo "==> Pulling global agent instructions..."
 curl -fsSL "$RAE_REPO/$RAE_VERSION/CLAUDE.md" -o .claude/GLOBAL_INSTRUCTIONS.md
-curl -fsSL "$RAE_REPO/$RAE_VERSION/GEMINI.md" -o .gemini_context.md 2>/dev/null || true
 
 # Pull guidelines
 echo "==> Pulling guidelines..."
@@ -91,79 +85,12 @@ if [ ! -f CLAUDE.md ]; then
 HEREDOC
 fi
 
-# 6. Install shared skills to ~/.skillz (Gemini/MCP compatibility)
-echo ""
-echo "==> Installing shared skills to ~/.skillz (Gemini compatibility)..."
-mkdir -p ~/.skillz/deslop
-mkdir -p ~/.skillz/consult-guidelines
-mkdir -p ~/.skillz/config-improvement
-mkdir -p ~/.skillz/enforce-guidelines
-mkdir -p ~/.skillz/scaffold-repo
-
-curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/deslop/SKILL.md" -o ~/.skillz/deslop/SKILL.md
-curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/consult-guidelines/SKILL.md" -o ~/.skillz/consult-guidelines/SKILL.md
-curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/config-improvement/SKILL.md" -o ~/.skillz/config-improvement/SKILL.md
-curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/enforce-guidelines/SKILL.md" -o ~/.skillz/enforce-guidelines/SKILL.md
-curl -fsSL "$RAE_REPO/$RAE_VERSION/skills/scaffold-repo/SKILL.md" -o ~/.skillz/scaffold-repo/SKILL.md
-
-# 7. Install Gemini extensions (if gemini CLI is available)
-echo ""
-echo "==> Installing Gemini extensions..."
-if command -v gemini &> /dev/null; then
-    gemini extensions install gemini-cli-extensions/conductor --auto-update 2>/dev/null || echo "    Conductor already installed or unavailable"
-    gemini extensions install intellectronica/gemini-cli-skillz 2>/dev/null || echo "    gemini-cli-skillz already installed or unavailable"
-else
-    echo "    Gemini CLI not found, skipping extension installation"
-fi
-
-# 8. Set up conductor context if not exists
-if [ ! -f conductor/product.md ]; then
-    echo ""
-    echo "==> Setting up Conductor context..."
-    cat > conductor/product.md << 'HEREDOC'
-# Product Context
-
-## Vision
-
-<!-- Describe the product vision -->
-
-## Goals
-
-<!-- List primary goals -->
-
-## Non-Goals
-
-<!-- What this project explicitly does NOT do -->
-HEREDOC
-fi
-
-if [ ! -f conductor/workflow.md ]; then
-    cat > conductor/workflow.md << 'HEREDOC'
-# Workflow Preferences
-
-## Development Flow
-
-1. Understand requirements
-2. Write failing test (TDD)
-3. Implement minimal solution
-4. Refactor and clean up
-5. Run deslop before commit
-
-## Review Checklist
-
-- [ ] Tests pass
-- [ ] Ruff format/check clean
-- [ ] No slop patterns
-- [ ] Atomic commits
-HEREDOC
-fi
-
-# 9. Record version
+# 6. Record version
 echo ""
 echo "==> Recording version..."
 echo "$RAE_VERSION" > .rae-version
 
-# 10. Add to .gitignore if not present
+# 8. Add to .gitignore if not present
 if [ -f .gitignore ]; then
     grep -q ".rae-version" .gitignore || echo ".rae-version" >> .gitignore
 else
@@ -178,8 +105,7 @@ echo "║  Version: $RAE_VERSION                                     ║"
 echo "║                                                            ║"
 echo "║  Next steps:                                               ║"
 echo "║  1. Edit CLAUDE.md with project-specific instructions      ║"
-echo "║  2. Edit conductor/product.md with your product context    ║"
-echo "║  3. Start working with 'claude' or 'gemini' CLI            ║"
+echo "║  2. Start working with 'claude' CLI                        ║"
 echo "║                                                            ║"
 echo "║  To upgrade: RAE_VERSION=<tag> ./scripts/sync.sh           ║"
 echo "╚════════════════════════════════════════════════════════════╝"
