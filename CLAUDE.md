@@ -9,11 +9,13 @@
 
 You MUST consult and follow these guidelines. This is not optional.
 
-- `guidelines/coding-standards.md` — Core development practices (TDD, DRY, fail-fast)
-- `guidelines/python-standards.md` — Python-specific rules (ruff 120 chars, typing, paths)
-- `guidelines/repo-structure.md` — Repository layout and pyproject.toml requirements
-- `guidelines/git-workflow.md` — Git discipline and commit standards
-- `guidelines/anti-patterns.md` — What to avoid ("slop")
+Guidelines are bundled as reference files in `skills/enforce-guidelines/references/`:
+
+- `coding-standards.md` — Core development practices (TDD, DRY, fail-fast)
+- `python-standards.md` — Python-specific rules (ruff 120 chars, typing, paths)
+- `repo-structure.md` — Repository layout and pyproject.toml requirements
+- `git-workflow.md` — Git discipline and commit standards
+- `anti-patterns.md` — What to avoid ("slop")
 
 **Before any code task:** Consult applicable guidelines. See `/enforce-guidelines` for the required process.
 

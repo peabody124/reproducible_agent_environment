@@ -78,7 +78,7 @@ project/
 - Tests in `tests/` mirroring src structure
 - Scratch work in `scraps/` (gitignored)
 
-See `guidelines/repo-structure.md` for complete requirements.
+See `references/repo-structure.md` for complete requirements.
 
 ## Dependencies
 
@@ -144,7 +144,7 @@ fail_under = 80
 show_missing = true
 ```
 
-See `guidelines/coding-standards.md` for TDD requirements.
+See `references/coding-standards.md` for TDD requirements.
 
 ## Red Flags (Violations)
 

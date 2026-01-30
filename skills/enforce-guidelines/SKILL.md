@@ -43,13 +43,14 @@ Before responding to ANY code-related request:
 
 ## Where to Find Guidelines
 
-Guidelines are bundled with the RAE plugin. Look for them in order of precedence:
+Guidelines are bundled as reference files alongside this skill:
 
-1. **Project-local:** `./guidelines/*.md` (if vendored)
-2. **Plugin bundle:** Bundled with RAE plugin installation
-3. **RAE repository:** https://github.com/peabody124/reproducible_agent_environment/tree/main/guidelines
-
-If you cannot find guidelines, check `.agent_setup_instructions/` for setup help.
+- `references/coding-standards.md`
+- `references/python-standards.md`
+- `references/repo-structure.md`
+- `references/git-workflow.md`
+- `references/anti-patterns.md`
+- `references/pre-commit-checklist.md`
 
 ## Guideline Mapping
 

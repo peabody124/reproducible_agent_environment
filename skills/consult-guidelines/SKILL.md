@@ -26,10 +26,12 @@ Based on task type, identify which guidelines to review.
 - `all` → all guidelines
 
 **Constraints:**
-- You MUST read `guidelines/coding-standards.md` for any code changes
-- You MUST read `guidelines/python-standards.md` for Python work
-- You MUST read `guidelines/git-workflow.md` before any commits
-- You SHOULD read `guidelines/anti-patterns.md` before code review or refactoring
+- You MUST read `references/coding-standards.md` (in the enforce-guidelines skill) for any code changes
+- You MUST read `references/python-standards.md` for Python work
+- You MUST read `references/git-workflow.md` before any commits
+- You SHOULD read `references/anti-patterns.md` before code review or refactoring
+
+Note: Guidelines are bundled as reference files in the `enforce-guidelines` skill.
 
 ### 2. Summarize Key Points
 

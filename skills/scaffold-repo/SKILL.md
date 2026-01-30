@@ -5,7 +5,7 @@ description: Initialize a new Python repository with correct structure following
 
 ## Overview
 
-This skill creates a properly structured Python repository from scratch. It enforces `guidelines/repo-structure.md` requirements automatically.
+This skill creates a properly structured Python repository from scratch. It enforces `enforce-guidelines/references/repo-structure.md` requirements automatically.
 
 **Use when:**
 - Creating a new Python project
@@ -48,7 +48,7 @@ touch tests/__init__.py
 
 ### 3. Create pyproject.toml
 
-Generate pyproject.toml following `guidelines/repo-structure.md`:
+Generate pyproject.toml following `enforce-guidelines/references/repo-structure.md`:
 
 ```toml
 [build-system]

@@ -1,13 +1,13 @@
 # Reproducible Agent Environment (RAE)
 
-Standardized AI agent configurations for consistent development across projects. Provides shared skills, SOPs, and coding standards for **Claude Code**.
+Standardized AI agent configurations for consistent development across projects. Provides shared skills and coding standards for **Claude Code**.
 
 ## Why RAE?
 
 Just as Docker standardizes runtime environments, RAE standardizes the context and tooling for AI agents working on your code. This means:
 
 - **Consistent behavior** across projects
-- **Shared improvements** flow to all projects via sync
+- **Shared improvements** flow to all projects via plugin updates
 - **Version-controlled workflows** that evolve with your practices
 - **Enforced guidelines** — not suggestions, requirements
 
@@ -69,27 +69,7 @@ bd setup claude
 
 See `.devcontainer/` in this repo as the canonical reference.
 
-### Vendored Guidelines (Optional)
-
-For repos where you want guidelines checked into version control:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/main/scripts/bootstrap.sh | bash
-```
-
-This adds `guidelines/` and `.claude/GLOBAL_INSTRUCTIONS.md` to the repo. Use this only for repos you own.
-
 ## What's Included
-
-### Guidelines (`guidelines/`)
-
-| File | Purpose |
-|------|---------|
-| `coding-standards.md` | TDD mandate, DRY, fail-fast, configuration |
-| `python-standards.md` | ruff (120 chars), typing, coverage ≥80% |
-| `repo-structure.md` | Repository layout, pyproject.toml requirements |
-| `git-workflow.md` | Staging discipline, commit standards |
-| `anti-patterns.md` | "Slop" patterns to avoid |
 
 ### Skills (`skills/`)
 
@@ -101,6 +81,17 @@ This adds `guidelines/` and `.claude/GLOBAL_INSTRUCTIONS.md` to the repo. Use th
 | `consult-guidelines` | Review relevant guidelines for task | Manual |
 | `config-improvement` | Propose improvements upstream | Manual |
 | `bead-driven-development` | Orchestrate planning + execution with beads tracking | Manual |
+
+### Guidelines (bundled in `skills/enforce-guidelines/references/`)
+
+| File | Purpose |
+|------|---------|
+| `coding-standards.md` | TDD mandate, DRY, fail-fast, configuration |
+| `python-standards.md` | ruff (120 chars), typing, coverage ≥80% |
+| `repo-structure.md` | Repository layout, pyproject.toml requirements |
+| `git-workflow.md` | Staging discipline, commit standards |
+| `anti-patterns.md` | "Slop" patterns to avoid |
+| `pre-commit-checklist.md` | Pre-commit verification workflow |
 
 ### Bead-Driven Development Prerequisites
 
@@ -120,13 +111,6 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 # Initialize beads in your repo
 bd init
 ```
-
-### Agent Self-Setup (`.agent_setup_instructions/`)
-
-Instructions for agents to self-configure:
-- `setup-checklist.md` — Step-by-step plugin installation
-- `verify-installation.md` — How to confirm RAE works
-- `troubleshooting.md` — Common issues and fixes
 
 ## Key Standards
 
@@ -158,7 +142,6 @@ RAE skills are inspired by [obra/superpowers](https://github.com/obra/superpower
 | Script | Purpose | Modifies Repo? |
 |--------|---------|----------------|
 | `install-user.sh` | User-level installation (RAE + full plugin suite) | No |
-| `bootstrap.sh` | Full repo setup with vendored guidelines | Yes |
 | `sync.sh` | Update RAE to latest version | Depends |
 
 ## Upgrading
@@ -169,11 +152,8 @@ Re-run the install script or update the plugin directly:
 # User-level: re-run install
 curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/main/scripts/install-user.sh | bash
 
-# Repo-level: sync script
-./scripts/sync.sh
-
 # Or update the plugin in Claude Code
-/plugin update rae@rae-marketplace
+/plugin update rae@reproducible_agent_environment
 ```
 
 ## Contributing

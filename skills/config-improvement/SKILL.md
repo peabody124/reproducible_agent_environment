@@ -9,7 +9,7 @@ When you discover a better pattern, configuration, or guideline during work, thi
 
 ## Parameters
 
-- **improvement_type** (optional): "guideline", "skill", "sop", "config", or "template"
+- **improvement_type** (optional): "guideline", "skill", "config", or "template"
 - **description** (required): Brief description of the improvement
 
 ## Steps
@@ -48,8 +48,10 @@ Prepare a clear description of the change.
 ### 4. Update Local
 
 After PR is merged:
-- Run `scripts/sync.sh` to pull the improvement
+- Update the RAE plugin to pull the improvement
 - Verify it works correctly in your project
+
+See `references/propose-upstream.md` for the detailed upstream contribution workflow.
 
 ## Examples
 
