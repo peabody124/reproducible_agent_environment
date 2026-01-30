@@ -13,11 +13,20 @@ echo "║  Reproducible Agent Environment (RAE) Bootstrap            ║"
 echo "║  Version: $RAE_VERSION                                     ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 
-# 1. Install agent CLIs
+# 1. Install Claude Code CLI (native binary)
 echo ""
-echo "==> Installing agent CLIs..."
-if command -v npm &> /dev/null; then
-    npm install -g @anthropic-ai/claude-code 2>/dev/null || echo "    Claude Code already installed or npm not available"
+echo "==> Checking Claude Code CLI..."
+if command -v claude &> /dev/null; then
+    echo "    ✓ Claude Code already installed"
+else
+    echo "    Installing Claude Code via native binary..."
+    curl -fsSL https://claude.ai/install.sh | bash
+    export PATH="$HOME/.local/bin:$PATH"
+    if command -v claude &> /dev/null; then
+        echo "    ✓ Claude Code installed"
+    else
+        echo "    Claude Code install failed — install manually"
+    fi
 fi
 
 # 2. Install RAE as Claude Code plugin (if claude CLI available)

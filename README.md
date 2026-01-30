@@ -13,57 +13,71 @@ Just as Docker standardizes runtime environments, RAE standardizes the context a
 
 ## Installation
 
-### Option 1: Claude Code Plugin (Recommended)
+### Install the Plugin
 
-Install RAE as a native Claude Code plugin — no repo pollution:
+RAE is distributed as a Claude Code plugin. No files are added to your repos.
 
-```bash
-# In Claude Code, add the marketplace
+**Interactive (in Claude Code):**
+
+```
 /plugin marketplace add peabody124/reproducible_agent_environment
-
-# Install the RAE plugin
-/plugin install rae@rae-marketplace
+/plugin install rae@reproducible_agent_environment
 ```
 
-### Option 2: User-Level Install (Dev Containers)
-
-Installs RAE to your home directory only — nothing added to repos:
+**Scripted (one-liner):**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/main/scripts/install-user.sh | bash
 ```
 
-This installs to:
-- `~/.claude/rae/` — Guidelines cache
-- Claude Code plugin system
+This installs Claude Code (native binary), the RAE plugin, and the full recommended plugin suite (pyright-lsp, official Claude plugins, beads, superpowers).
 
-**Use this for dev containers** — add to `postCreateCommand`.
+### Recommended Plugins
 
-### Option 3: Full Bootstrap (Your Own Repos)
+The install script installs all of these automatically. For manual installation:
 
-Sets up a repo with vendored guidelines and full RAE structure:
+```
+# Official Claude plugins
+/plugin install pyright-lsp@claude-plugin-directory
+/plugin install code-review@claude-plugin-directory
+/plugin install feature-dev@claude-plugin-directory
+/plugin install code-simplifier@claude-plugin-directory
+/plugin install plugin-dev@claude-plugin-directory
+
+# Beads (bead-driven development)
+curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+/plugin marketplace add steveyegge/beads
+/plugin install beads
+bd setup claude
+
+# Superpowers (TDD enforcement, planning, review)
+/plugin marketplace add obra/superpowers-marketplace
+/plugin install superpowers@superpowers-marketplace
+```
+
+### Devcontainers
+
+**New project:** Copy `.devcontainer/` from this repo into your project. It includes a Dockerfile (Python 3.11, ripgrep, Claude Code, pyright) and a devcontainer.json that runs `install-user.sh` on creation.
+
+**Existing devcontainer:** Merge these pieces into your configuration:
+
+1. **Dockerfile** — add `curl -fsSL https://claude.ai/install.sh | bash` and `pip install pyright` (see `.devcontainer/Dockerfile` for the full reference)
+2. **Mounts** — bind `~/.claude` into the container for credential access
+3. **postCreateCommand** — run `install-user.sh` to install the full plugin suite
+4. **containerEnv** — set `CLAUDE_CONFIG_DIR` to the mounted `.claude` path and `ENABLE_LSP_TOOL` to `1`
+
+See `.devcontainer/` in this repo as the canonical reference.
+
+### Vendored Guidelines (Optional)
+
+For repos where you want guidelines checked into version control:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/main/scripts/bootstrap.sh | bash
 ```
 
-This adds files to the repo:
-- `guidelines/` directory
-- `.claude/GLOBAL_INSTRUCTIONS.md`
-
-**Use this only for repos you own** where you want versioned guidelines.
-
-### Option 4: With Devcontainers
-
-Copy `.devcontainer/devcontainer.json` to your project:
-
-```json
-{
-  "postCreateCommand": "curl -fsSL .../install-user.sh | bash"
-}
-```
-
-The dev container auto-installs RAE at user level without modifying the project.
+This adds `guidelines/` and `.claude/GLOBAL_INSTRUCTIONS.md` to the repo. Use this only for repos you own.
 
 ## What's Included
 
@@ -143,24 +157,22 @@ RAE skills are inspired by [obra/superpowers](https://github.com/obra/superpower
 
 | Script | Purpose | Modifies Repo? |
 |--------|---------|----------------|
-| `install-user.sh` | User-level only installation | No |
+| `install-user.sh` | User-level installation (RAE + full plugin suite) | No |
 | `bootstrap.sh` | Full repo setup with vendored guidelines | Yes |
 | `sync.sh` | Update RAE to latest version | Depends |
 
 ## Upgrading
 
+Re-run the install script or update the plugin directly:
+
 ```bash
 # User-level: re-run install
-curl -fsSL .../install-user.sh | bash
+curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/main/scripts/install-user.sh | bash
 
 # Repo-level: sync script
 ./scripts/sync.sh
-```
 
-Or update the Claude Code plugin:
-
-```bash
-# In Claude Code
+# Or update the plugin in Claude Code
 /plugin update rae@rae-marketplace
 ```
 
@@ -176,6 +188,7 @@ Discovered a better pattern? Use the `/config-improvement` skill or:
 ## Research References
 
 - [obra/superpowers](https://github.com/obra/superpowers) — Skill-driven TDD enforcement
+
 ## License
 
 MIT

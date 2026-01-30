@@ -1,14 +1,14 @@
 {
   "name": "RAE Python Environment",
-  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
 
   "mounts": [
-    "source=${localEnv:HOME}/.anthropic,target=/home/vscode/.anthropic,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
   ],
 
   "features": {
-    "ghcr.io/devcontainers/features/node:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers/features/python:1": {
       "version": "3.11"
@@ -42,6 +42,7 @@
 
   "containerEnv": {
     "RAE_VERSION": "main",
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",
     "ENABLE_LSP_TOOL": "1"
   },
 

@@ -139,6 +139,7 @@ htmlcov/
 
 # RAE
 scraps/
+scratch/
 .rae-version
 
 # OS
@@ -177,7 +178,13 @@ ruff check .
 MIT
 ```
 
-### 6. Create Initial Test
+### 6. Create Initial Test Files
+
+Create `tests/conftest.py`:
+
+```python
+"""Shared test fixtures."""
+```
 
 Create `tests/test_placeholder.py`:
 
@@ -193,6 +200,7 @@ def test_placeholder() -> None:
 **Constraints:**
 - You MUST include type hints (-> None)
 - You MUST include a docstring
+- You MUST create conftest.py for shared fixtures
 - This ensures pytest runs successfully from the start
 
 ### 7. Initialize Git (if not already)
@@ -221,6 +229,30 @@ pytest
 - You MUST run ruff format before completing
 - You MUST run ruff check with no errors
 - You MUST run pytest with all tests passing
+
+### 9. (Optional) Add Devcontainer
+
+If the user wants devcontainer support, create `.devcontainer/` matching the RAE reference configuration:
+
+- Copy the `Dockerfile` and `devcontainer.json` from the RAE repo's `.devcontainer/` directory
+- This gives the project Python 3.11, ripgrep, Claude Code, pyright, and automatic RAE plugin installation
+
+See the [RAE README](https://github.com/peabody124/reproducible_agent_environment#devcontainers) for details.
+
+### 10. RAE Plugin Setup
+
+Remind the user to install the RAE plugin and recommended plugins if not already configured:
+
+```
+/plugin marketplace add peabody124/reproducible_agent_environment
+/plugin install rae@reproducible_agent_environment
+```
+
+Or run the full install script which also installs pyright-lsp, official Claude plugins (code-review, feature-dev, code-simplifier, plugin-dev), beads, and superpowers:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/main/scripts/install-user.sh | bash
+```
 
 ## Adding Optional Dependencies
 

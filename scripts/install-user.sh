@@ -9,28 +9,30 @@ set -euo pipefail
 # - Personal workstation setup
 # - Working on other people's repos without modifying them
 
-RAE_REPO="${RAE_REPO:-https://raw.githubusercontent.com/peabody124/reproducible_agent_environment}"
 RAE_REPO_ID="${RAE_REPO_ID:-peabody124/reproducible_agent_environment}"
-RAE_VERSION="${RAE_VERSION:-main}"
 
 echo "╔════════════════════════════════════════════════════════════╗"
 echo "║  RAE User-Level Installation                               ║"
-echo "║  Version: $RAE_VERSION                                     ║"
 echo "║                                                            ║"
 echo "║  This installs to ~/.claude/ only                           ║"
 echo "║  No files will be added to the current directory           ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 
-# 1. Install Claude Code CLI (if npm available)
+# 1. Install Claude Code CLI (native binary)
 echo ""
 echo "==> Checking Claude Code CLI..."
 if command -v claude &> /dev/null; then
     echo "    ✓ Claude Code already installed"
-elif command -v npm &> /dev/null; then
-    echo "    Installing Claude Code..."
-    npm install -g @anthropic-ai/claude-code 2>/dev/null || echo "    Could not install (may need sudo)"
 else
-    echo "    npm not found, skipping Claude Code CLI install"
+    echo "    Installing Claude Code via native binary..."
+    curl -fsSL https://claude.ai/install.sh | bash
+    # Ensure it's on PATH for the rest of this script
+    export PATH="$HOME/.local/bin:$PATH"
+    if command -v claude &> /dev/null; then
+        echo "    ✓ Claude Code installed"
+    else
+        echo "    Claude Code install failed — install manually"
+    fi
 fi
 
 # 2. Install RAE as Claude Code plugin
@@ -57,70 +59,88 @@ else
     echo "      /plugin install rae@reproducible_agent_environment"
 fi
 
-# 3. Cache guidelines in ~/.claude/rae/ for reference
+# 3. Install pyright-lsp plugin
 echo ""
-echo "==> Caching guidelines to ~/.claude/rae/..."
-mkdir -p ~/.claude/rae/guidelines
-mkdir -p ~/.claude/rae/templates
-
-for guide in coding-standards python-standards repo-structure git-workflow anti-patterns; do
-    curl -fsSL "$RAE_REPO/$RAE_VERSION/guidelines/${guide}.md" -o ~/.claude/rae/guidelines/${guide}.md
-done
-curl -fsSL "$RAE_REPO/$RAE_VERSION/templates/pyproject.toml" -o ~/.claude/rae/templates/pyproject.toml
-echo "    ✓ Guidelines cached to ~/.claude/rae/"
-
-# 4. Install Python LSP (pyright) for code intelligence
-echo ""
-echo "==> Installing Python LSP (pyright)..."
-if command -v npm &> /dev/null; then
-    npm install -g pyright 2>/dev/null && echo "    ✓ pyright installed via npm" || echo "    pyright already installed or install failed"
-elif command -v pip &> /dev/null; then
-    pip install pyright 2>/dev/null && echo "    ✓ pyright installed via pip" || echo "    pyright already installed or install failed"
-else
-    echo "    Neither npm nor pip found, skipping pyright install"
-    echo "    Install manually: npm install -g pyright"
-fi
-
-# 5. Enable LSP tool in shell profile
-echo ""
-echo "==> Configuring ENABLE_LSP_TOOL..."
-SHELL_PROFILE=""
-if [ -f ~/.zshrc ]; then
-    SHELL_PROFILE=~/.zshrc
-elif [ -f ~/.bashrc ]; then
-    SHELL_PROFILE=~/.bashrc
-fi
-
-if [ -n "$SHELL_PROFILE" ]; then
-    if ! grep -q "ENABLE_LSP_TOOL" "$SHELL_PROFILE" 2>/dev/null; then
-        echo "" >> "$SHELL_PROFILE"
-        echo "# Claude Code LSP support (added by RAE)" >> "$SHELL_PROFILE"
-        echo "export ENABLE_LSP_TOOL=1" >> "$SHELL_PROFILE"
-        echo "    ✓ Added ENABLE_LSP_TOOL=1 to $SHELL_PROFILE"
+echo "==> Installing pyright-lsp plugin..."
+if command -v claude &> /dev/null; then
+    if claude plugin install pyright-lsp@claude-plugin-directory --scope user 2>/dev/null; then
+        echo "    ✓ pyright-lsp plugin installed"
     else
-        echo "    ✓ ENABLE_LSP_TOOL already configured"
+        echo "    pyright-lsp plugin already installed or unavailable"
     fi
 else
-    echo "    No shell profile found, add manually: export ENABLE_LSP_TOOL=1"
+    echo "    Claude Code CLI not found, skipping pyright-lsp install"
+    echo "    After installing Claude Code, run:"
+    echo "      /plugin install pyright-lsp@claude-plugin-directory"
 fi
 
-# Also export for current session
-export ENABLE_LSP_TOOL=1
+# 4. Install official Claude plugins
+echo ""
+echo "==> Installing official Claude plugins..."
+if command -v claude &> /dev/null; then
+    for plugin in code-review feature-dev code-simplifier plugin-dev; do
+        if claude plugin install "${plugin}@claude-plugin-directory" --scope user 2>/dev/null; then
+            echo "    ✓ ${plugin} plugin installed"
+        else
+            echo "    ${plugin} plugin already installed or unavailable"
+        fi
+    done
+else
+    echo "    Claude Code CLI not found, skipping official plugins"
+fi
 
-# 6. Record version
-echo "$RAE_VERSION" > ~/.claude/rae/.version
+# 5. Install beads (CLI + uv + marketplace + plugin)
+echo ""
+echo "==> Installing beads..."
+if ! command -v bd &> /dev/null; then
+    curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash 2>/dev/null || echo "    beads CLI install failed"
+fi
+if ! command -v uv &> /dev/null; then
+    curl -LsSf https://astral.sh/uv/install.sh | sh 2>/dev/null || echo "    uv install failed"
+fi
+if command -v claude &> /dev/null; then
+    claude marketplace add steveyegge/beads 2>/dev/null || true
+    if claude plugin install beads --scope user 2>/dev/null; then
+        echo "    ✓ beads plugin installed"
+    else
+        echo "    beads plugin already installed or unavailable"
+    fi
+    # Set up beads for Claude Code
+    if command -v bd &> /dev/null; then
+        bd setup claude 2>/dev/null || true
+    fi
+else
+    echo "    Claude Code CLI not found, skipping beads plugin"
+fi
+
+# 6. Install superpowers (marketplace + plugin)
+echo ""
+echo "==> Installing superpowers..."
+if command -v claude &> /dev/null; then
+    claude marketplace add obra/superpowers-marketplace 2>/dev/null || true
+    if claude plugin install superpowers@superpowers-marketplace --scope user 2>/dev/null; then
+        echo "    ✓ superpowers plugin installed"
+    else
+        echo "    superpowers plugin already installed or unavailable"
+    fi
+else
+    echo "    Claude Code CLI not found, skipping superpowers plugin"
+fi
 
 echo ""
 echo "╔════════════════════════════════════════════════════════════╗"
 echo "║  RAE User Installation Complete!                           ║"
 echo "║                                                            ║"
 echo "║  Installed:                                                ║"
-echo "║  - Claude plugin: rae@reproducible_agent_environment       ║"
-echo "║  - Guidelines: ~/.claude/rae/guidelines/                   ║"
-echo "║  - Python LSP: pyright (ENABLE_LSP_TOOL=1)                 ║"
+echo "║  - Claude Code CLI (native binary)                         ║"
+echo "║  - Plugin: rae@reproducible_agent_environment              ║"
+echo "║  - Plugin: pyright-lsp@claude-plugin-directory             ║"
+echo "║  - Plugins: code-review, feature-dev, code-simplifier,    ║"
+echo "║             plugin-dev (official Claude plugins)           ║"
+echo "║  - Plugin: beads (bead-driven development)                 ║"
+echo "║  - Plugin: superpowers@superpowers-marketplace             ║"
 echo "║                                                            ║"
 echo "║  No files were added to the current directory.             ║"
 echo "║                                                            ║"
 echo "║  To create a new project: /scaffold-repo                   ║"
-echo "║  Restart shell or run: source ~/.bashrc (or ~/.zshrc)      ║"
 echo "╚════════════════════════════════════════════════════════════╝"

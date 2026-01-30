@@ -51,16 +51,17 @@ Common issues and solutions for RAE installation and usage.
 **Solution:**
 1. Check `postCreateCommand` in devcontainer.json
 2. Should run: `curl -fsSL .../scripts/install-user.sh | bash`
-3. Manually run the bootstrap if needed
+3. Manually run `install-user.sh` if needed
 
 ### Credentials not mounted
 
 **Symptom:** Can't authenticate to install plugins
 
 **Solution:**
-1. Check devcontainer.json mounts include `~/.anthropic`
-2. Verify credentials exist on host machine
-3. Restart container after adding mounts
+1. Check devcontainer.json mounts include `~/.claude`
+2. Verify `CLAUDE_CONFIG_DIR` is set in containerEnv
+3. Verify credentials exist on host machine
+4. Restart container after adding mounts
 
 ## Common Errors
 

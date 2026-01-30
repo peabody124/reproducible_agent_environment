@@ -49,16 +49,66 @@ RAE guidelines should be accessible via the plugin. Key guidelines:
 - `git-workflow.md` — Commit standards
 - `anti-patterns.md` — Slop patterns to avoid
 
-## Step 5: Recommended Additional Plugins
+## Step 5: Install pyright-lsp Plugin
 
-For enhanced development, also install:
+For Python code intelligence (type checking, go-to-definition):
+
+```
+/plugin install pyright-lsp@claude-plugin-directory
+```
+
+Verify pyright is available:
+
+```bash
+pyright --version
+```
+
+If pyright is not installed as a binary, install it: `pip install pyright`
+
+## Step 6: Install Official Claude Plugins
+
+Install the remaining official Claude plugins:
+
+```
+/plugin install code-review@claude-plugin-directory
+/plugin install feature-dev@claude-plugin-directory
+/plugin install code-simplifier@claude-plugin-directory
+/plugin install plugin-dev@claude-plugin-directory
+```
+
+## Step 7: Install Beads
+
+Beads enables bead-driven development workflows:
+
+```bash
+# Install beads CLI
+curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
+
+# Install uv (if not already available)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Then in Claude Code:
+
+```
+/plugin marketplace add steveyegge/beads
+/plugin install beads
+```
+
+Set up beads for Claude Code:
+
+```bash
+bd setup claude
+```
+
+## Step 8: Install Superpowers
+
+For TDD enforcement, planning, and review skills:
 
 ```
 /plugin marketplace add obra/superpowers-marketplace
 /plugin install superpowers@superpowers-marketplace
 ```
-
-This adds TDD enforcement, planning, and review skills.
 
 ## Verification Complete
 
