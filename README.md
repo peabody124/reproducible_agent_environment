@@ -68,30 +68,18 @@ This creates the full RAE-compliant project structure: `src/` layout, `pyproject
 
 ### Devcontainers
 
-**New project:** Use `/scaffold-repo` with the devcontainer option, or copy `.devcontainer/` from this repo into your project. It includes a Dockerfile (Python 3.11, ripgrep, Claude Code, pyright) and a devcontainer.json that runs `install-user.sh` on creation.
+**New project:** Use `/scaffold-repo` with the devcontainer option, or copy `.devcontainer/` from this repo into your project. No custom Dockerfile needed — everything is installed via `postCreateCommand`.
 
-**Existing devcontainer:** Add these pieces to your configuration:
+**Existing devcontainer:** Add these fields to your `devcontainer.json`:
 
-**Dockerfile additions** (after your base image):
-```dockerfile
-RUN apt-get update && apt-get install -y ripgrep && rm -rf /var/lib/apt/lists/*
-
-USER vscode
-RUN curl -fsSL https://claude.ai/install.sh | bash
-RUN pip install pyright
-
-ENV PATH="/home/vscode/.local/bin:${PATH}"
-```
-
-**devcontainer.json additions:**
 ```jsonc
 {
-  // Add to mounts (create ~/.claude on host first: mkdir -p ~/.claude)
+  // Mount host Claude config (create first: mkdir -p ~/.claude)
   "mounts": [
     "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
   ],
 
-  // Run after container creation to install RAE + full plugin suite
+  // Install RAE + full plugin suite after container creation
   "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/main/scripts/install-user.sh | bash",
 
   // Required environment variables
@@ -102,6 +90,8 @@ ENV PATH="/home/vscode/.local/bin:${PATH}"
   }
 }
 ```
+
+The `install-user.sh` script handles everything: Claude Code, pyright, RAE plugin, and the full recommended plugin suite.
 
 See `.devcontainer/` in this repo as the canonical reference.
 

@@ -219,32 +219,17 @@ pytest
 
 ### 9. (Optional) Add Devcontainer
 
-If the user wants devcontainer support, create `.devcontainer/` with two files.
+If the user wants devcontainer support, create `.devcontainer/devcontainer.json` (no Dockerfile needed):
 
-**`.devcontainer/Dockerfile`:**
-```dockerfile
-FROM mcr.microsoft.com/devcontainers/python:3.11
-
-RUN apt-get update && apt-get install -y ripgrep && rm -rf /var/lib/apt/lists/*
-
-USER vscode
-RUN curl -fsSL https://claude.ai/install.sh | bash
-RUN pip install pyright
-
-ENV PATH="/home/vscode/.local/bin:${PATH}"
-```
-
-**`.devcontainer/devcontainer.json`:**
 ```json
 {
   "name": "{name}",
-  "build": { "dockerfile": "Dockerfile" },
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
   "mounts": [
     "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
   ],
   "features": {
-    "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/python:1": { "version": "3.11" }
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/main/scripts/install-user.sh | bash",
   "containerEnv": {
@@ -256,7 +241,7 @@ ENV PATH="/home/vscode/.local/bin:${PATH}"
 }
 ```
 
-This gives the project Python 3.11, ripgrep, Claude Code, pyright, and automatic RAE plugin installation.
+The `postCreateCommand` runs `install-user.sh` which installs Claude Code, pyright, RAE plugin, and the full recommended plugin suite.
 
 **Note:** Ensure `~/.claude` exists on the host before starting the devcontainer: `mkdir -p ~/.claude`
 
