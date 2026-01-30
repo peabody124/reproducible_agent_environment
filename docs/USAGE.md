@@ -51,6 +51,7 @@ Skills are available through the Claude Code plugin:
 |-------|-------------|
 | `/datajoint-biomechanics-schema` | DataJoint pipeline schema reference |
 | `/pose-datajoint` | Python code patterns for DataJoint pose queries |
+| `/gait-metrics` | Gait analysis: walking segments, spatiotemporal metrics, GDI |
 
 ## Proposing Improvements
 

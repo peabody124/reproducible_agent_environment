@@ -316,6 +316,49 @@ MonocularReconstruction (subject_id, project, session_start_time, method)
 
 ---
 
+## DataJoint Schema Names
+
+Each repository stores tables in named MySQL schemas. Use these to connect directly or create virtual modules with `dj.VirtualModule('alias', 'schema_name')`.
+
+| Schema Name | Repository | Key Tables |
+|-------------|-----------|------------|
+| `pose_pipeline` | PosePipeline | Video, VideoInfo, TopDownPerson, LiftingPerson |
+| `mocap_sessions` | MultiCameraTracking | Subject, Session, Recording |
+| `multicamera_tracking` | MultiCameraTracking | MultiCameraRecording, SingleCameraVideo, PersonKeypointReconstruction, Calibration |
+| `multicamera_tracking_annotation` | MultiCameraTracking | VideoActivity (walking/standing labels) |
+| `project_body_models` | BodyModels | KinematicReconstruction, KinematicReconstruction.Trial, ProbabilisticReconstruction |
+| `project_monocular_testing` | BodyModels | MonocularReconstruction, MonocularReconstruction.Trial |
+| `project_body_models_gait_cycles` | BodyModels | GaitTransformer, GaitTransformer.WalkingSegment, GaitTransformer.Steps, GaitTransformerMonocular |
+| `project_gdi` | BodyModels | GDICycles, GDICyclesMonocular, GDIJointsLookup |
+| `emgimu_sessions` | PortableBiomechanicsSessions | Subject, Session, FirebaseSession, FirebaseSession.AppVideo |
+| `openpbl_session_annotations` | PortableBiomechanicsSessions | VideoActivity (PBL), WalkingType |
+
+### Connecting Without Code Access
+
+```python
+import datajoint as dj
+
+# Create virtual modules to access tables without installing the package
+kinematic = dj.VirtualModule('kinematic', 'project_body_models')
+gait = dj.VirtualModule('gait', 'project_body_models_gait_cycles')
+sessions = dj.VirtualModule('sessions', 'mocap_sessions')
+pose = dj.VirtualModule('pose', 'pose_pipeline')
+mmc = dj.VirtualModule('mmc', 'multicamera_tracking')
+
+# Then query as usual
+keys = kinematic.KinematicReconstruction.fetch('KEY')
+```
+
+### Gait-Specific Tables
+
+For gait analysis (walking segments, step metrics, GDI), see the `/gait-metrics` skill which documents:
+- Walking segment detection and validation
+- Spatiotemporal gait metrics (step length, cadence, velocity)
+- Gait Deviation Index (GDI) computation
+- Joint ROM analysis per gait cycle/phase
+
+---
+
 ## Files to Explore
 
 | Task | File |
@@ -326,3 +369,10 @@ MonocularReconstruction (subject_id, project, session_start_time, method)
 | MMC KinematicReconstruction | `BodyModels/body_models/datajoint/kinematic_dj.py` |
 | PBL Subject/Session/FirebaseSession | `PortableBiomechanicsSessions/portable_biomechanics_sessions/emgimu_session.py` |
 | PBL MonocularReconstruction | `BodyModels/body_models/datajoint/monocular_dj.py` |
+| Gait Cycles/Walking Segments | `BodyModels/body_models/datajoint/gait/gait_cycles_dj.py` |
+| GDI (Gait Deviation Index) | `BodyModels/body_models/datajoint/gait/gdi_dj.py` |
+| Gait Step/Phase Metrics | `BodyModels/body_models/datajoint/gait/gait_analysis.py` |
+| Gait Event Detection | `BodyModels/body_models/biomechanics_mjx/gait/gait_transformer_cycles.py` |
+| Gait Metrics (standalone) | `BodyModels/body_models/biomechanics_mjx/gait/gait_metrics.py` |
+| VideoActivity (MMC walking labels) | `MultiCameraTracking/multi_camera/datajoint/annotation.py` |
+| VideoActivity (PBL walking labels) | `PortableBiomechanicsSessions/portable_biomechanics_sessions/session_annotations.py` |

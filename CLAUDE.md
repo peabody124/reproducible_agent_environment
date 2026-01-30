@@ -42,6 +42,7 @@ Guidelines are bundled in `skills/enforce-guidelines/references/`:
 ### Domain-Specific
 - `/datajoint-biomechanics-schema` — DataJoint pipeline schema reference
 - `/pose-datajoint` — Python code patterns for DataJoint pose queries
+- `/gait-metrics` — Gait analysis: walking segments, spatiotemporal metrics, GDI
 
 ## Tech Stack Preferences
 
