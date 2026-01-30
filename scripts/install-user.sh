@@ -39,15 +39,15 @@ fi
 echo ""
 echo "==> Installing RAE plugin..."
 if command -v claude &> /dev/null; then
-    # Add marketplace
-    if claude marketplace add "$RAE_REPO_ID" 2>/dev/null; then
+    # Add marketplace (note: "plugin marketplace", not just "marketplace")
+    if claude plugin marketplace add "$RAE_REPO_ID" --name rae-marketplace 2>/dev/null; then
         echo "    ✓ RAE marketplace registered"
     else
         echo "    RAE marketplace already registered or unavailable"
     fi
 
-    # Install plugin
-    if claude plugin install rae@reproducible_agent_environment --scope user 2>/dev/null; then
+    # Install plugin (use the marketplace name we explicitly set)
+    if claude plugin install rae@rae-marketplace --scope user 2>/dev/null; then
         echo "    ✓ RAE plugin installed"
     else
         echo "    RAE plugin already installed or unavailable"
@@ -55,8 +55,8 @@ if command -v claude &> /dev/null; then
 else
     echo "    Claude Code CLI not found"
     echo "    After installing, run these commands in Claude Code:"
-    echo "      /plugin marketplace add $RAE_REPO_ID"
-    echo "      /plugin install rae@reproducible_agent_environment"
+    echo "      /plugin marketplace add $RAE_REPO_ID --name rae-marketplace"
+    echo "      /plugin install rae@rae-marketplace"
 fi
 
 # 3. Install pyright binary (needed by pyright-lsp plugin)
@@ -111,8 +111,8 @@ if ! command -v uv &> /dev/null; then
     curl -LsSf https://astral.sh/uv/install.sh | sh 2>/dev/null || echo "    uv install failed"
 fi
 if command -v claude &> /dev/null; then
-    claude marketplace add steveyegge/beads 2>/dev/null || true
-    if claude plugin install beads --scope user 2>/dev/null; then
+    claude plugin marketplace add steveyegge/beads --name beads-marketplace 2>/dev/null || true
+    if claude plugin install beads@beads-marketplace --scope user 2>/dev/null; then
         echo "    ✓ beads plugin installed"
     else
         echo "    beads plugin already installed or unavailable"
@@ -129,7 +129,7 @@ fi
 echo ""
 echo "==> Installing superpowers..."
 if command -v claude &> /dev/null; then
-    claude marketplace add obra/superpowers-marketplace 2>/dev/null || true
+    claude plugin marketplace add obra/superpowers-marketplace --name superpowers-marketplace 2>/dev/null || true
     if claude plugin install superpowers@superpowers-marketplace --scope user 2>/dev/null; then
         echo "    ✓ superpowers plugin installed"
     else
@@ -145,7 +145,7 @@ echo "║  RAE User Installation Complete!                        ║"
 echo "║                                                         ║"
 echo "║  Installed:                                             ║"
 echo "║  - Claude Code CLI (native binary)                      ║"
-echo "║  - Plugin: rae@reproducible_agent_environment           ║"
+echo "║  - Plugin: rae@rae-marketplace                          ║"
 echo "║  - Plugin: pyright-lsp@claude-plugin-directory          ║"
 echo "║  - Plugins: code-review, feature-dev,                   ║"
 echo "║    code-simplifier, plugin-dev (official Claude)        ║"
