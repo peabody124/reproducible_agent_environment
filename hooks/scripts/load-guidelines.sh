@@ -15,7 +15,9 @@ fi
 echo "# RAE Guidelines (auto-loaded)"
 echo ""
 
-for guide in coding-standards python-standards git-workflow anti-patterns; do
+# Load the core guidelines that apply to every session.
+# repo-structure.md is excluded — only relevant when scaffolding new repos.
+for guide in coding-standards python-standards git-workflow anti-patterns pre-commit-checklist; do
     file="$REF_DIR/${guide}.md"
     if [ -f "$file" ]; then
         cat "$file"

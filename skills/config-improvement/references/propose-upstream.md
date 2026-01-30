@@ -9,7 +9,7 @@ Workflow for proposing configuration, skill, or guideline improvements to the up
 Agent discovers a better pattern during work:
 - Improved pytest/ruff configuration
 - New or refined guideline
-- Enhanced skill or SOP
+- Enhanced skill
 - Better default settings
 
 ## Steps
@@ -67,7 +67,7 @@ Open PR with complete context.
 Once the PR is merged:
 
 **Constraints:**
-- You MUST run `scripts/sync.sh` to pull the improvement
+- You MUST update the RAE plugin (`/plugin update rae@reproducible_agent_environment`) to pull the improvement
 - You MUST verify the improvement works correctly
 - You SHOULD remove any local overrides that are now upstream
 
@@ -80,7 +80,7 @@ Once the PR is merged:
 3. Create branch `improve/ruff-ruf-rules`
 4. Update pyproject.toml, commit with rationale
 5. Open PR: "Add RUF rules to ruff config for additional checks"
-6. After merge: `./scripts/sync.sh` and remove local override
+6. After merge: update the RAE plugin and remove local override
 
 ## Troubleshooting
 

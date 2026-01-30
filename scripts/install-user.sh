@@ -59,7 +59,19 @@ else
     echo "      /plugin install rae@reproducible_agent_environment"
 fi
 
-# 3. Install pyright-lsp plugin
+# 3. Install pyright binary (needed by pyright-lsp plugin)
+echo ""
+echo "==> Checking pyright..."
+if command -v pyright &> /dev/null; then
+    echo "    ✓ pyright already installed"
+elif command -v pip &> /dev/null; then
+    pip install pyright 2>/dev/null && echo "    ✓ pyright installed via pip" || echo "    pyright install failed — install manually: pip install pyright"
+else
+    echo "    pip not found, skipping pyright install"
+    echo "    Install manually: pip install pyright"
+fi
+
+# 4. Install pyright-lsp plugin
 echo ""
 echo "==> Installing pyright-lsp plugin..."
 if command -v claude &> /dev/null; then
@@ -74,7 +86,7 @@ else
     echo "      /plugin install pyright-lsp@claude-plugin-directory"
 fi
 
-# 4. Install official Claude plugins
+# 5. Install official Claude plugins
 echo ""
 echo "==> Installing official Claude plugins..."
 if command -v claude &> /dev/null; then
@@ -89,7 +101,7 @@ else
     echo "    Claude Code CLI not found, skipping official plugins"
 fi
 
-# 5. Install beads (CLI + uv + marketplace + plugin)
+# 6. Install beads (CLI + uv + marketplace + plugin)
 echo ""
 echo "==> Installing beads..."
 if ! command -v bd &> /dev/null; then
@@ -113,7 +125,7 @@ else
     echo "    Claude Code CLI not found, skipping beads plugin"
 fi
 
-# 6. Install superpowers (marketplace + plugin)
+# 7. Install superpowers (marketplace + plugin)
 echo ""
 echo "==> Installing superpowers..."
 if command -v claude &> /dev/null; then

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Workflow to run before committing any changes to ensure quality and consistency. This SOP should be followed for every commit.
+Workflow to run before committing any changes to ensure quality and consistency. This checklist should be followed for every commit.
 
 ## Trigger
 

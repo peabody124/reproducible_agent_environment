@@ -2,13 +2,13 @@
 
 ## Overview
 
-RAE provides standardized AI agent configurations across projects. It supports Claude Code with shared skills and coding standards.
+RAE provides standardized AI agent configurations across projects. It supports Claude Code with shared skills, coding standards, and a SessionStart hook that auto-loads guidelines.
 
 For installation, see the [README](../README.md).
 
 ## Local Overrides
 
-Add project-specific instructions to `CLAUDE.md` below the global include:
+Add project-specific instructions to `CLAUDE.md`:
 
 ```markdown
 # Project Agent Instructions
@@ -33,6 +33,8 @@ because the schema is not guaranteed.
 
 Skills are available through the Claude Code plugin:
 
+### Core Skills
+
 | Skill | Description |
 |-------|-------------|
 | `/enforce-guidelines` | Ensures work follows RAE standards (auto-activates) |
@@ -40,6 +42,15 @@ Skills are available through the Claude Code plugin:
 | `/consult-guidelines` | Review relevant guidelines for current task |
 | `/scaffold-repo` | Create new repos with correct structure |
 | `/config-improvement` | Propose improvements to upstream RAE |
+| `/bead-driven-development` | Orchestrate planning + execution with beads tracking |
+| `/investigation` | Scaffold structured research in scratch/ |
+
+### Domain-Specific Skills
+
+| Skill | Description |
+|-------|-------------|
+| `/datajoint-biomechanics-schema` | DataJoint pipeline schema reference |
+| `/pose-datajoint` | Python code patterns for DataJoint pose queries |
 
 ## Proposing Improvements
 

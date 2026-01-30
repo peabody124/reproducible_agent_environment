@@ -1,11 +1,16 @@
 ---
 name: scaffold-repo
-description: Initialize a new Python repository with correct structure following RAE guidelines
+description: >
+  Initialize a new Python repository with correct structure following RAE guidelines.
+  Use when the user says "new repo", "new project", "initialize", "scaffold", "create
+  a project", "set up a repo", or "start a new package". Creates src/ layout,
+  pyproject.toml, tests, .gitignore, and optionally a devcontainer.
 ---
 
 ## Overview
 
-This skill creates a properly structured Python repository from scratch. It enforces `enforce-guidelines/references/repo-structure.md` requirements automatically.
+This skill creates a properly structured Python repository from scratch. It enforces
+the standards in `enforce-guidelines/references/repo-structure.md`.
 
 **Use when:**
 - Creating a new Python project
@@ -24,14 +29,11 @@ This skill creates a properly structured Python repository from scratch. It enfo
 
 ### 1. Validate Inputs
 
-**Constraints:**
 - You MUST verify project name is lowercase with hyphens only
 - You MUST derive package_name from project name (replace hyphens with underscores)
 - You MUST NOT proceed without a description
 
 ### 2. Create Directory Structure
-
-Create the required structure:
 
 ```bash
 mkdir -p src/{package_name}
@@ -41,14 +43,11 @@ touch src/{package_name}/py.typed
 touch tests/__init__.py
 ```
 
-**Constraints:**
 - You MUST use src/ layout
 - You MUST create both src/ and tests/ directories
 - You MUST include py.typed marker for type hint support
 
 ### 3. Create pyproject.toml
-
-Generate pyproject.toml following `enforce-guidelines/references/repo-structure.md`:
 
 ```toml
 [build-system]
@@ -106,7 +105,6 @@ quote-style = "double"
 indent-style = "space"
 ```
 
-**Constraints:**
 - You MUST set line-length = 120
 - You MUST put pytest and ruff in dev optional-dependencies
 - You MUST NOT put dev tools in main dependencies
@@ -172,10 +170,6 @@ ruff format .
 # Lint code
 ruff check .
 ```
-
-## License
-
-MIT
 ```
 
 ### 6. Create Initial Test Files
@@ -197,11 +191,8 @@ def test_placeholder() -> None:
     assert True
 ```
 
-**Constraints:**
 - You MUST include type hints (-> None)
-- You MUST include a docstring
 - You MUST create conftest.py for shared fixtures
-- This ensures pytest runs successfully from the start
 
 ### 7. Initialize Git (if not already)
 
@@ -211,13 +202,10 @@ git add .
 git commit -m "feat: Initialize {name} with RAE structure"
 ```
 
-**Constraints:**
 - You MUST NOT commit if already in a git repo with uncommitted changes
 - You SHOULD offer to commit but confirm with user first
 
 ### 8. Verify Structure
-
-Run verification:
 
 ```bash
 ruff format .
@@ -225,34 +213,52 @@ ruff check .
 pytest
 ```
 
-**Constraints:**
 - You MUST run ruff format before completing
 - You MUST run ruff check with no errors
 - You MUST run pytest with all tests passing
 
 ### 9. (Optional) Add Devcontainer
 
-If the user wants devcontainer support, create `.devcontainer/` matching the RAE reference configuration:
+If the user wants devcontainer support, create `.devcontainer/` with two files.
 
-- Copy the `Dockerfile` and `devcontainer.json` from the RAE repo's `.devcontainer/` directory
-- This gives the project Python 3.11, ripgrep, Claude Code, pyright, and automatic RAE plugin installation
+**`.devcontainer/Dockerfile`:**
+```dockerfile
+FROM mcr.microsoft.com/devcontainers/python:3.11
 
-See the [RAE README](https://github.com/peabody124/reproducible_agent_environment#devcontainers) for details.
+RUN apt-get update && apt-get install -y ripgrep && rm -rf /var/lib/apt/lists/*
 
-### 10. RAE Plugin Setup
+USER vscode
+RUN curl -fsSL https://claude.ai/install.sh | bash
+RUN pip install pyright
 
-Remind the user to install the RAE plugin and recommended plugins if not already configured:
-
+ENV PATH="/home/vscode/.local/bin:${PATH}"
 ```
-/plugin marketplace add peabody124/reproducible_agent_environment
-/plugin install rae@reproducible_agent_environment
+
+**`.devcontainer/devcontainer.json`:**
+```json
+{
+  "name": "{name}",
+  "build": { "dockerfile": "Dockerfile" },
+  "mounts": [
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
+  ],
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/python:1": { "version": "3.11" }
+  },
+  "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/main/scripts/install-user.sh | bash",
+  "containerEnv": {
+    "RAE_VERSION": "main",
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",
+    "ENABLE_LSP_TOOL": "1"
+  },
+  "remoteUser": "vscode"
+}
 ```
 
-Or run the full install script which also installs pyright-lsp, official Claude plugins (code-review, feature-dev, code-simplifier, plugin-dev), beads, and superpowers:
+This gives the project Python 3.11, ripgrep, Claude Code, pyright, and automatic RAE plugin installation.
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/main/scripts/install-user.sh | bash
-```
+**Note:** Ensure `~/.claude` exists on the host before starting the devcontainer: `mkdir -p ~/.claude`
 
 ## Adding Optional Dependencies
 

@@ -1,11 +1,17 @@
 ---
 name: consult-guidelines
-description: Review relevant guidelines before starting a task
+description: >
+  Review relevant coding guidelines before starting a task. Use when the user says
+  "consult guidelines", "check standards", "what are the rules for", "review guidelines",
+  or when starting Python, git, refactoring, debugging, or code review work. Also useful
+  when asking "what line length", "how should I format", "what's the testing policy".
 ---
 
 ## Overview
 
-Read and internalize the coding guidelines relevant to the current task. This ensures consistent application of standards across all work.
+Read and internalize the coding guidelines relevant to the current task. Guidelines are
+bundled as reference files in the `enforce-guidelines` skill at
+`enforce-guidelines/references/`.
 
 ## Parameters
 
@@ -15,29 +21,22 @@ Read and internalize the coding guidelines relevant to the current task. This en
 
 ### 1. Determine Relevant Guidelines
 
-Based on task type, identify which guidelines to review.
+Based on task type, identify which guidelines to review from `enforce-guidelines/references/`:
 
-**Mapping:**
-- `python` → coding-standards.md, python-standards.md
-- `git` → git-workflow.md
-- `refactor` → coding-standards.md, anti-patterns.md
-- `debug` → coding-standards.md (TDD section)
-- `review` → anti-patterns.md, coding-standards.md
-- `all` → all guidelines
-
-**Constraints:**
-- You MUST read `references/coding-standards.md` (in the enforce-guidelines skill) for any code changes
-- You MUST read `references/python-standards.md` for Python work
-- You MUST read `references/git-workflow.md` before any commits
-- You SHOULD read `references/anti-patterns.md` before code review or refactoring
-
-Note: Guidelines are bundled as reference files in the `enforce-guidelines` skill.
+| Task Type | Guidelines to Read |
+|-----------|-------------------|
+| `python` | `coding-standards.md`, `python-standards.md` |
+| `git` | `git-workflow.md`, `pre-commit-checklist.md` |
+| `refactor` | `coding-standards.md`, `anti-patterns.md` |
+| `debug` | `coding-standards.md` (TDD section) |
+| `review` | `anti-patterns.md`, `coding-standards.md` |
+| `new-repo` | `repo-structure.md`, `python-standards.md` |
+| `all` | All guidelines |
 
 ### 2. Summarize Key Points
 
 Extract the 3-5 most relevant rules for the current task.
 
-**Constraints:**
 - You MUST highlight any MUST/MUST NOT constraints
 - You SHOULD note any task-specific gotchas
 
@@ -45,7 +44,6 @@ Extract the 3-5 most relevant rules for the current task.
 
 Keep these guidelines in mind while executing the task. Reference them when making decisions.
 
-**Constraints:**
 - You MUST cite the relevant guideline when it influences a decision
 - You SHOULD flag if you discover a case not covered by guidelines
 

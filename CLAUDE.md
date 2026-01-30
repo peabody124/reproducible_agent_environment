@@ -9,13 +9,13 @@
 
 You MUST consult and follow these guidelines. This is not optional.
 
-Guidelines are bundled as reference files in `skills/enforce-guidelines/references/`:
+Guidelines are bundled in `skills/enforce-guidelines/references/`:
 
-- `coding-standards.md` — Core development practices (TDD, DRY, fail-fast)
-- `python-standards.md` — Python-specific rules (ruff 120 chars, typing, paths)
-- `repo-structure.md` — Repository layout and pyproject.toml requirements
-- `git-workflow.md` — Git discipline and commit standards
-- `anti-patterns.md` — What to avoid ("slop")
+- `skills/enforce-guidelines/references/coding-standards.md` — Core development practices (TDD, DRY, fail-fast)
+- `skills/enforce-guidelines/references/python-standards.md` — Python-specific rules (ruff 120 chars, typing, paths)
+- `skills/enforce-guidelines/references/repo-structure.md` — Repository layout and pyproject.toml requirements
+- `skills/enforce-guidelines/references/git-workflow.md` — Git discipline and commit standards
+- `skills/enforce-guidelines/references/anti-patterns.md` — What to avoid ("slop")
 
 **Before any code task:** Consult applicable guidelines. See `/enforce-guidelines` for the required process.
 
@@ -36,6 +36,12 @@ Guidelines are bundled as reference files in `skills/enforce-guidelines/referenc
 - `/consult-guidelines` — Review relevant guidelines for current task
 - `/scaffold-repo` — Initialize a new repository with correct structure
 - `/config-improvement` — Propose improvements to upstream RAE repo
+- `/bead-driven-development` — Orchestrate planning + execution with beads tracking
+- `/investigation` — Scaffold structured research in scratch/
+
+### Domain-Specific
+- `/datajoint-biomechanics-schema` — DataJoint pipeline schema reference
+- `/pose-datajoint` — Python code patterns for DataJoint pose queries
 
 ## Tech Stack Preferences
 

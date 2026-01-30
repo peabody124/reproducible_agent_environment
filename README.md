@@ -30,7 +30,7 @@ RAE is distributed as a Claude Code plugin. No files are added to your repos.
 curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/main/scripts/install-user.sh | bash
 ```
 
-This installs Claude Code (native binary), the RAE plugin, and the full recommended plugin suite (pyright-lsp, official Claude plugins, beads, superpowers).
+This installs Claude Code (native binary), pyright, the RAE plugin, and the full recommended plugin suite (pyright-lsp, official Claude plugins, beads, superpowers).
 
 ### Recommended Plugins
 
@@ -56,22 +56,58 @@ bd setup claude
 /plugin install superpowers@superpowers-marketplace
 ```
 
+### Scaffolding a New Project
+
+Use the `/scaffold-repo` skill to create a properly structured Python project:
+
+```
+/scaffold-repo my-project A tool for analyzing motion capture data
+```
+
+This creates the full RAE-compliant project structure: `src/` layout, `pyproject.toml`, tests, `.gitignore`, and optionally a devcontainer. See `skills/scaffold-repo/SKILL.md` for the complete reference.
+
 ### Devcontainers
 
-**New project:** Copy `.devcontainer/` from this repo into your project. It includes a Dockerfile (Python 3.11, ripgrep, Claude Code, pyright) and a devcontainer.json that runs `install-user.sh` on creation.
+**New project:** Use `/scaffold-repo` with the devcontainer option, or copy `.devcontainer/` from this repo into your project. It includes a Dockerfile (Python 3.11, ripgrep, Claude Code, pyright) and a devcontainer.json that runs `install-user.sh` on creation.
 
-**Existing devcontainer:** Merge these pieces into your configuration:
+**Existing devcontainer:** Add these pieces to your configuration:
 
-1. **Dockerfile** — add `curl -fsSL https://claude.ai/install.sh | bash` and `pip install pyright` (see `.devcontainer/Dockerfile` for the full reference)
-2. **Mounts** — bind `~/.claude` into the container for credential access
-3. **postCreateCommand** — run `install-user.sh` to install the full plugin suite
-4. **containerEnv** — set `CLAUDE_CONFIG_DIR` to the mounted `.claude` path and `ENABLE_LSP_TOOL` to `1`
+**Dockerfile additions** (after your base image):
+```dockerfile
+RUN apt-get update && apt-get install -y ripgrep && rm -rf /var/lib/apt/lists/*
+
+USER vscode
+RUN curl -fsSL https://claude.ai/install.sh | bash
+RUN pip install pyright
+
+ENV PATH="/home/vscode/.local/bin:${PATH}"
+```
+
+**devcontainer.json additions:**
+```jsonc
+{
+  // Add to mounts (create ~/.claude on host first: mkdir -p ~/.claude)
+  "mounts": [
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
+  ],
+
+  // Run after container creation to install RAE + full plugin suite
+  "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/main/scripts/install-user.sh | bash",
+
+  // Required environment variables
+  "containerEnv": {
+    "RAE_VERSION": "main",
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",
+    "ENABLE_LSP_TOOL": "1"
+  }
+}
+```
 
 See `.devcontainer/` in this repo as the canonical reference.
 
 ## What's Included
 
-### Skills (`skills/`)
+### Skills
 
 | Skill | Purpose | Activation |
 |-------|---------|------------|
@@ -81,6 +117,9 @@ See `.devcontainer/` in this repo as the canonical reference.
 | `consult-guidelines` | Review relevant guidelines for task | Manual |
 | `config-improvement` | Propose improvements upstream | Manual |
 | `bead-driven-development` | Orchestrate planning + execution with beads tracking | Manual |
+| `investigation` | Scaffold structured research in scratch/ | Manual |
+| `datajoint-biomechanics-schema` | DataJoint pipeline schema reference | Auto — domain queries |
+| `pose-datajoint` | Python code patterns for DataJoint pose queries | Auto — domain queries |
 
 ### Guidelines (bundled in `skills/enforce-guidelines/references/`)
 
@@ -93,9 +132,13 @@ See `.devcontainer/` in this repo as the canonical reference.
 | `anti-patterns.md` | "Slop" patterns to avoid |
 | `pre-commit-checklist.md` | Pre-commit verification workflow |
 
+### SessionStart Hook
+
+RAE includes a `SessionStart` hook that automatically loads the core guidelines (coding-standards, python-standards, git-workflow, anti-patterns, pre-commit-checklist) into every Claude Code session. No manual consultation needed — the standards are always in context.
+
 ### Bead-Driven Development Prerequisites
 
-The `bead-driven-development` skill requires additional plugins:
+The `bead-driven-development` skill requires additional plugins (installed automatically by `install-user.sh`):
 
 ```bash
 # Install beads CLI and plugin
@@ -137,13 +180,6 @@ RAE skills are inspired by [obra/superpowers](https://github.com/obra/superpower
 - **TDD is the default** — tests before implementation
 - **Verification required** — `ruff format && ruff check && pytest` before completion
 
-## Scripts
-
-| Script | Purpose | Modifies Repo? |
-|--------|---------|----------------|
-| `install-user.sh` | User-level installation (RAE + full plugin suite) | No |
-| `sync.sh` | Update RAE to latest version | Depends |
-
 ## Upgrading
 
 Re-run the install script or update the plugin directly:
@@ -168,7 +204,3 @@ Discovered a better pattern? Use the `/config-improvement` skill or:
 ## Research References
 
 - [obra/superpowers](https://github.com/obra/superpowers) — Skill-driven TDD enforcement
-
-## License
-
-MIT
