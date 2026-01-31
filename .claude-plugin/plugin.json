@@ -1,5 +1,4 @@
 {
-  "id": "rae",
   "name": "rae",
   "description": "Reproducible Agent Environment: 10 skills for coding standards enforcement, quality gates, repo scaffolding, and domain-specific development (biomechanics, DataJoint, gait analysis)",
   "version": "1.2.0",
