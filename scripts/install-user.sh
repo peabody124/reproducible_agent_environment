@@ -40,7 +40,7 @@ echo ""
 echo "==> Installing RAE plugin..."
 if command -v claude &> /dev/null; then
     # Add marketplace (note: "plugin marketplace", not just "marketplace")
-    if claude plugin marketplace add "$RAE_REPO_ID" --name rae-marketplace 2>/dev/null; then
+    if claude plugin marketplace add "$RAE_REPO_ID" 2>/dev/null; then
         echo "    ✓ RAE marketplace registered"
     else
         echo "    RAE marketplace already registered or unavailable"
@@ -57,7 +57,7 @@ if command -v claude &> /dev/null; then
 else
     echo "    Claude Code CLI not found"
     echo "    After installing, run these commands in Claude Code:"
-    echo "      /plugin marketplace add $RAE_REPO_ID --name rae-marketplace"
+    echo "      /plugin marketplace add $RAE_REPO_ID"
     echo "      /plugin install rae@rae-marketplace"
 fi
 
@@ -113,7 +113,7 @@ if ! command -v uv &> /dev/null; then
     curl -LsSf https://astral.sh/uv/install.sh | sh 2>/dev/null || echo "    uv install failed"
 fi
 if command -v claude &> /dev/null; then
-    claude plugin marketplace add steveyegge/beads --name beads-marketplace 2>/dev/null || true
+    claude plugin marketplace add steveyegge/beads 2>/dev/null || true
     if claude plugin install beads@beads-marketplace --scope user 2>/dev/null; then
         echo "    ✓ beads plugin installed"
     else
@@ -131,7 +131,7 @@ fi
 echo ""
 echo "==> Installing superpowers..."
 if command -v claude &> /dev/null; then
-    claude plugin marketplace add obra/superpowers-marketplace --name superpowers-marketplace 2>/dev/null || true
+    claude plugin marketplace add obra/superpowers-marketplace 2>/dev/null || true
     if claude plugin install superpowers@superpowers-marketplace --scope user 2>/dev/null; then
         echo "    ✓ superpowers plugin installed"
     else
