@@ -66,10 +66,12 @@ echo ""
 echo "==> Checking pyright..."
 if command -v pyright &> /dev/null; then
     echo "    ✓ pyright already installed"
+elif command -v uv &> /dev/null; then
+    uv tool install pyright 2>/dev/null && echo "    ✓ pyright installed via uv" || echo "    pyright install via uv failed"
 elif command -v pip &> /dev/null; then
     pip install pyright 2>/dev/null && echo "    ✓ pyright installed via pip" || echo "    pyright install failed — install manually: pip install pyright"
 else
-    echo "    pip not found, skipping pyright install"
+    echo "    Neither uv nor pip found, skipping pyright install"
     echo "    Install manually: pip install pyright"
 fi
 
@@ -77,7 +79,7 @@ fi
 echo ""
 echo "==> Installing pyright-lsp plugin..."
 if command -v claude &> /dev/null; then
-    if claude plugin install pyright-lsp@claude-plugin-directory --scope user 2>/dev/null; then
+    if claude plugin install pyright-lsp@claude-plugins-official --scope user 2>/dev/null; then
         echo "    ✓ pyright-lsp plugin installed"
     else
         echo "    pyright-lsp plugin already installed or unavailable"
@@ -85,7 +87,7 @@ if command -v claude &> /dev/null; then
 else
     echo "    Claude Code CLI not found, skipping pyright-lsp install"
     echo "    After installing Claude Code, run:"
-    echo "      /plugin install pyright-lsp@claude-plugin-directory"
+    echo "      /plugin install pyright-lsp@claude-plugins-official"
 fi
 
 # 5. Install official Claude plugins
@@ -93,7 +95,7 @@ echo ""
 echo "==> Installing official Claude plugins..."
 if command -v claude &> /dev/null; then
     for plugin in code-review feature-dev code-simplifier plugin-dev; do
-        if claude plugin install "${plugin}@claude-plugin-directory" --scope user 2>/dev/null; then
+        if claude plugin install "${plugin}@claude-plugins-official" --scope user 2>/dev/null; then
             echo "    ✓ ${plugin} plugin installed"
         else
             echo "    ${plugin} plugin already installed or unavailable"
@@ -148,7 +150,7 @@ echo "║                                                         ║"
 echo "║  Installed:                                             ║"
 echo "║  - Claude Code CLI (native binary)                      ║"
 echo "║  - Plugin: rae@rae-marketplace                          ║"
-echo "║  - Plugin: pyright-lsp@claude-plugin-directory          ║"
+echo "║  - Plugin: pyright-lsp@claude-plugins-official          ║"
 echo "║  - Plugins: code-review, feature-dev,                   ║"
 echo "║    code-simplifier, plugin-dev (official Claude)        ║"
 echo "║  - Plugin: beads (bead-driven development)              ║"
