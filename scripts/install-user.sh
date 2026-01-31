@@ -46,11 +46,13 @@ if command -v claude &> /dev/null; then
         echo "    RAE marketplace already registered or unavailable"
     fi
 
-    # Install plugin (use the marketplace name we explicitly set)
+    # Install plugin, or update if already installed
     if claude plugin install rae@rae-marketplace --scope user 2>/dev/null; then
         echo "    ✓ RAE plugin installed"
+    elif claude plugin update rae@rae-marketplace 2>/dev/null; then
+        echo "    ✓ RAE plugin updated"
     else
-        echo "    RAE plugin already installed or unavailable"
+        echo "    RAE plugin install/update failed"
     fi
 else
     echo "    Claude Code CLI not found"
