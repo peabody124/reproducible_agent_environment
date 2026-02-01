@@ -61,7 +61,24 @@ else
     echo "      /plugin install rae@rae-marketplace"
 fi
 
-# 3. Install pyright binary (needed by pyright-lsp plugin)
+# 3. Install uv (needed by pyright, beads MCP server, and general Python tooling)
+echo ""
+echo "==> Checking uv..."
+if command -v uv &> /dev/null; then
+    echo "    ✓ uv already installed"
+else
+    echo "    Installing uv..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh 2>/dev/null || echo "    uv install failed"
+    # Source uv env so it's available for the rest of this script
+    [ -f "$HOME/.local/bin/env" ] && source "$HOME/.local/bin/env"
+    if command -v uv &> /dev/null; then
+        echo "    ✓ uv installed"
+    else
+        export PATH="$HOME/.local/bin:$PATH"
+    fi
+fi
+
+# 4. Install pyright binary (needed by pyright-lsp plugin)
 echo ""
 echo "==> Checking pyright..."
 if command -v pyright &> /dev/null; then
@@ -75,7 +92,7 @@ else
     echo "    Install manually: pip install pyright"
 fi
 
-# 4. Install pyright-lsp plugin
+# 5. Install pyright-lsp plugin
 echo ""
 echo "==> Installing pyright-lsp plugin..."
 if command -v claude &> /dev/null; then
@@ -90,7 +107,7 @@ else
     echo "      /plugin install pyright-lsp@claude-plugins-official"
 fi
 
-# 5. Install official Claude plugins
+# 6. Install official Claude plugins
 echo ""
 echo "==> Installing official Claude plugins..."
 if command -v claude &> /dev/null; then
@@ -105,31 +122,41 @@ else
     echo "    Claude Code CLI not found, skipping official plugins"
 fi
 
-# 6. Install beads (CLI + uv + marketplace + plugin)
+# 7. Install beads (CLI + marketplace plugin + Claude Code hooks)
 echo ""
 echo "==> Installing beads..."
-if ! command -v bd &> /dev/null; then
+
+# Install or update bd CLI
+if command -v bd &> /dev/null; then
+    echo "    ✓ beads CLI already installed ($(bd version --short 2>/dev/null || echo 'unknown version'))"
+else
+    echo "    Installing beads CLI..."
     curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash 2>/dev/null || echo "    beads CLI install failed"
+    export PATH="$HOME/.local/bin:$HOME/go/bin:$PATH"
 fi
-if ! command -v uv &> /dev/null; then
-    curl -LsSf https://astral.sh/uv/install.sh | sh 2>/dev/null || echo "    uv install failed"
-fi
+
+# Install beads Claude Code plugin (adds /beads:* slash commands)
 if command -v claude &> /dev/null; then
     claude plugin marketplace add steveyegge/beads 2>/dev/null || true
     if claude plugin install beads@beads-marketplace --scope user 2>/dev/null; then
         echo "    ✓ beads plugin installed"
+    elif claude plugin update beads@beads-marketplace 2>/dev/null; then
+        echo "    ✓ beads plugin updated"
     else
         echo "    beads plugin already installed or unavailable"
-    fi
-    # Set up beads for Claude Code
-    if command -v bd &> /dev/null; then
-        bd setup claude 2>/dev/null || true
     fi
 else
     echo "    Claude Code CLI not found, skipping beads plugin"
 fi
 
-# 7. Install superpowers (marketplace + plugin)
+# Set up Claude Code hooks (SessionStart → bd prime, PreCompact → bd sync)
+if command -v bd &> /dev/null; then
+    bd setup claude 2>/dev/null && echo "    ✓ beads Claude Code hooks configured" || true
+else
+    echo "    bd not found — beads hooks not configured"
+fi
+
+# 8. Install superpowers (marketplace + plugin)
 echo ""
 echo "==> Installing superpowers..."
 if command -v claude &> /dev/null; then
