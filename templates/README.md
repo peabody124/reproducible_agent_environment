@@ -54,10 +54,20 @@ touch .env          # Create env file for secrets
 **GPU template requires `.env` file:**
 ```bash
 # .env (add to .gitignore!)
+# GPU selection — no GPU by default so containers don't grab GPUs unexpectedly.
+# CUDA_DEVICE_ORDER=PCI_BUS_ID ensures device IDs match nvidia-smi output.
+# Change CUDA_VISIBLE_DEVICES to a GPU index (e.g. 0) when ready to use one.
+CUDA_DEVICE_ORDER=PCI_BUS_ID
+CUDA_VISIBLE_DEVICES=-1
+
 # Add secrets here as needed:
 # HUGGINGFACE_TOKEN=hf_...
 # WANDB_API_KEY=...
 ```
+
+> **Note:** The default `.env.template` sets `CUDA_VISIBLE_DEVICES=-1` (no GPU).
+> You must assign a specific GPU (e.g. `CUDA_VISIBLE_DEVICES=0`) before running
+> any GPU workload. Use `nvidia-smi` on the host to see available devices.
 
 ## Using with /scaffold-repo
 
