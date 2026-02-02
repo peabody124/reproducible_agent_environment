@@ -43,6 +43,7 @@ Guidelines are bundled in `skills/enforce-guidelines/references/`:
 - `/datajoint-biomechanics-schema` — DataJoint pipeline schema reference
 - `/pose-datajoint` — Python code patterns for DataJoint pose queries
 - `/gait-metrics` — Gait analysis: walking segments, spatiotemporal metrics, GDI
+- `/jax-config` — JAX/Equinox-compatible config setup with pytree registration and tyro CLI
 
 ## Tech Stack Preferences
 
