@@ -11,6 +11,7 @@
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
 
+  "onCreateCommand": "sudo apt-get update && sudo apt-get install -y git-lfs && sudo rm -rf /var/lib/apt/lists/* && (git lfs install || true)",
   "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/${RAE_VERSION:-main}/scripts/install-user.sh | bash",
 
   "customizations": {
@@ -39,7 +40,8 @@
   "containerEnv": {
     "RAE_VERSION": "main",
     "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",
-    "ENABLE_LSP_TOOL": "1"
+    "ENABLE_LSP_TOOL": "1",
+    "CUDA_DEVICE_ORDER": "PCI_BUS_ID"
   },
 
   "remoteUser": "vscode"
