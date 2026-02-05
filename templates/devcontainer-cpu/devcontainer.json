@@ -42,7 +42,9 @@
     "RAE_VERSION": "main",
     "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",
     "ENABLE_LSP_TOOL": "1",
-    "CUDA_DEVICE_ORDER": "PCI_BUS_ID"
+    "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+    "CUDA_VISIBLE_DEVICES": "-1",
+    "GIT_LFS_SKIP_SMUDGE": "1"
   },
 
   "remoteUser": "vscode"

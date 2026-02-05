@@ -65,9 +65,24 @@ CUDA_VISIBLE_DEVICES=-1
 # WANDB_API_KEY=...
 ```
 
-> **Note:** The default `.env.template` sets `CUDA_VISIBLE_DEVICES=-1` (no GPU).
-> You must assign a specific GPU (e.g. `CUDA_VISIBLE_DEVICES=0`) before running
-> any GPU workload. Use `nvidia-smi` on the host to see available devices.
+> **Note:** Both devcontainer templates default to `CUDA_VISIBLE_DEVICES=-1` (no GPU).
+> Before running any GPU workload, use `nvidia-smi` to find a free GPU and explicitly
+> set one: `export CUDA_VISIBLE_DEVICES=0`. Never use all GPUs without checking first.
+
+### GPU Selection for Agents
+
+Add this to your project's `CLAUDE.md` so agents select GPUs responsibly:
+
+```markdown
+## GPU Usage
+Before running any GPU workload, run `nvidia-smi` to find a free GPU
+(look for one with low memory usage and no running processes). Then set:
+```bash
+export CUDA_VISIBLE_DEVICES=<gpu_id>   # e.g. 0, 1, etc.
+```
+Never use multiple GPUs without explicit permission. Never leave
+CUDA_VISIBLE_DEVICES unset — the default is -1 (no GPU) for safety.
+```
 
 ## Using with /scaffold-repo
 
