@@ -45,6 +45,7 @@ Guidelines are bundled in `skills/enforce-guidelines/references/`:
 - `/gait-metrics` — Gait analysis: walking segments, spatiotemporal metrics, GDI
 - `/jax-config` — JAX/Equinox-compatible config setup with pytree registration and tyro CLI
 - `/camera-model` — Camera projections, intrinsics/extrinsics, triangulation, mm/m unit conventions
+- `/gait-lab-dataset` — Clinical gait lab schema, video-mocap sync, MMC-GaitLab trial matching
 
 ## Tech Stack Preferences
 

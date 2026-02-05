@@ -8,8 +8,8 @@
     {
       "name": "rae",
       "source": "./",
-      "description": "11 skills for coding standards enforcement, quality gates, repo scaffolding, and domain-specific development (biomechanics, DataJoint, gait analysis, camera models)",
-      "version": "1.3.0"
+      "description": "12 skills for coding standards enforcement, quality gates, repo scaffolding, and domain-specific development (biomechanics, DataJoint, gait analysis, camera models)",
+      "version": "1.4.0"
     }
   ]
 }
