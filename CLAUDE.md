@@ -44,6 +44,7 @@ Guidelines are bundled in `skills/enforce-guidelines/references/`:
 - `/pose-datajoint` — Python code patterns for DataJoint pose queries
 - `/gait-metrics` — Gait analysis: walking segments, spatiotemporal metrics, GDI
 - `/jax-config` — JAX/Equinox-compatible config setup with pytree registration and tyro CLI
+- `/camera-model` — Camera projections, intrinsics/extrinsics, triangulation, mm/m unit conventions
 
 ## Tech Stack Preferences
 
