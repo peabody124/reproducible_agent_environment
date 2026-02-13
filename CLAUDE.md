@@ -38,6 +38,7 @@ Guidelines are bundled in `skills/enforce-guidelines/references/`:
 - `/config-improvement` — Propose improvements to upstream RAE repo
 - `/bead-driven-development` — Orchestrate planning + execution with beads tracking
 - `/investigation` — Scaffold structured research in scratch/
+- `/excalidraw` — Generate Excalidraw diagrams, render to PNG/SVG, visually verify
 
 ### Domain-Specific
 - `/datajoint-biomechanics-schema` — DataJoint pipeline schema reference
