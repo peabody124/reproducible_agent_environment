@@ -1,6 +1,6 @@
 ---
 name: gait-metrics
-description: Use when analyzing gait data, computing spatiotemporal metrics, finding valid walking segments, calculating step length/cadence/velocity, joint ROM per gait cycle, gait phase percentages, asymmetry indices, or Gait Deviation Index (GDI) from kinematic reconstructions
+description: Use when analyzing gait data, computing spatiotemporal metrics, finding valid walking segments, calculating step length/cadence/velocity, joint ROM per gait cycle, gait phase percentages, asymmetry indices, Gait Deviation Index (GDI), GaitAnalytics table queries, or normative gait comparisons from kinematic reconstructions
 ---
 
 # Gait Metrics Reference
@@ -287,6 +287,71 @@ clean_gait = GaitTransformer & good_track
 
 ---
 
+## GaitAnalytics (Per-Step/Cycle Detail)
+
+**Schema:** `idjuraskovic_gait_analytics`
+**Source:** `BodyModels/body_models/datajoint/gait/gait_analytics_dj.py`
+**Branch:** `gait_metrics_rebase` (in development, not merged to main)
+
+GaitAnalytics stores detailed per-step and per-cycle metrics in normalized part tables. Preferred over `StepMetrics` when available — provides individual step/cycle data rather than trial-level aggregates.
+
+### Table Structure
+
+`GaitAnalytics` (master) → `KinematicReconstruction.Trial`, `steps_count`
+
+| Part Table | Primary Data | Key Fields |
+|-----------|-------------|------------|
+| `Steps` | Per-step spatiotemporal | `side`, `step_length`, `step_width`, `step_time`, `t_down`, `t_up` |
+| `PhaseMetrics` | Per-cycle phase breakdown | `side`, `phase` (stance/swing/single_support/double_support), `percent_of_stride`, `duration_s` |
+| `CycleROM` | Joint ROM per gait cycle | `side`, `joint`, `rom`, `min_angle`, `max_angle` |
+| `PhaseROM` | Joint ROM per phase | `side`, `joint`, `phase` (stance/swing), `rom` |
+| `AnkleAtFootDown` | Ankle at contact | `side`, `ankle_angle`, `foot_down_time` |
+
+### Querying GaitAnalytics
+
+```python
+from body_models.datajoint.gait.gait_analytics_dj import GaitAnalytics
+
+key = {'participant_id': '104', 'session_date': date(2023, 7, 21),
+       'kinematic_reconstruction_settings_num': 137}
+
+# Per-step data
+steps = (GaitAnalytics.Steps & key).fetch(as_dict=True)
+
+# Phase breakdown per cycle
+phases = (GaitAnalytics.PhaseMetrics & key).fetch(as_dict=True)
+
+# Joint ROM per cycle
+rom = (GaitAnalytics.CycleROM & key).fetch(as_dict=True)
+```
+
+### Utility Functions
+
+```python
+from body_models.utils.gait_analytics_utils import (
+    fetch_all_gait_analytics,          # All part tables as dict of DataFrames
+    compute_step_summary_statistics,    # Median/std/min/max per side
+    compute_all_asymmetry_indices,      # Signed: 100 * (R - L) / avg(L, R)
+    compute_normative_step_statistics,  # Control group step stats
+    compute_normative_walking_speed,    # Control group walking speed
+    highlight_outliers,                 # Styler coloring outside normative range
+)
+
+# Fetch everything for a trial
+data = fetch_all_gait_analytics(key)
+# Returns: {'steps': df, 'phases': df, 'cycle_rom': df, 'phase_rom': df, 'ankle_at_foot_down': df}
+
+# Summary statistics
+summary = compute_step_summary_statistics(data['steps'], aggregation='median')
+
+# Asymmetry (signed: positive = right > left)
+asym = compute_all_asymmetry_indices(data['steps'], data['phases'], aggregation='median')
+```
+
+Control group filter: `participant_id LIKE '6%'`
+
+---
+
 ## Quick Reference: Imports
 
 ```python
@@ -318,6 +383,14 @@ from body_models.biomechanics_mjx.gait.gait_metrics import (
 # GDI computation
 from body_models.biomechanics_mjx.gait.gdi import (
     get_gdi_matrix_session, get_gdi_matrix_steps, pca_gdi,
+)
+
+# GaitAnalytics tables (branch: gait_metrics_rebase, not merged)
+from body_models.datajoint.gait.gait_analytics_dj import GaitAnalytics
+from body_models.utils.gait_analytics_utils import (
+    fetch_all_gait_analytics, compute_step_summary_statistics,
+    compute_all_asymmetry_indices, compute_normative_step_statistics,
+    compute_normative_walking_speed, highlight_outliers,
 )
 
 # Walking activity annotations
