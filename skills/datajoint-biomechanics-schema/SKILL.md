@@ -108,9 +108,6 @@ Session (participant_id, session_date)
 
 ### Common Access Patterns
 ```python
-# Get 2D keypoints with video info
-timestamps, keypoints = (TopDownPerson * VideoInfo & key).fetch1('timestamps', 'keypoints')
-
 # Get kinematic reconstruction (ALWAYS specify method!)
 qpos, sites = (KinematicReconstruction.Trial & key &
                {'kinematic_reconstruction_settings_num': 137}).fetch1('qpos', 'sites')
@@ -118,6 +115,33 @@ qpos, sites = (KinematicReconstruction.Trial & key &
 # Get 3D triangulated keypoints
 kp3d = (PersonKeypointReconstruction & key).fetch1('keypoints3d')
 ```
+
+**For 2D keypoints synchronized with KR qpos**, see the Temporal Synchronization section below. Do NOT use `(TopDownPerson * VideoInfo & key).fetch1('timestamps', 'keypoints')` — this produces misaligned frames.
+
+---
+
+## Temporal Synchronization (CRITICAL)
+
+KR qpos and 2D keypoints have **independently managed timestamps**. Naive matching silently corrupts frame alignment.
+
+**Correct approach:** Use `fetch_keypoints(only_detected=True)` from BodyModels:
+
+```python
+from body_models.datajoint.dataset import fetch_keypoints as bm_fetch_keypoints
+
+# Returns keypoints in 1:1 frame correspondence with KR qpos
+timestamps, keypoints_raw = bm_fetch_keypoints(trial_key, only_detected=True)
+# keypoints_raw: (C, T, 87, 3) — (x, y, confidence)
+
+# ALWAYS verify correspondence
+assert qpos.shape[0] == keypoints_raw.shape[1]
+```
+
+**Why direct TopDownPerson/VideoInfo fetch is broken:** KR timestamps are zeroed relative to first detection; VideoInfo timestamps are zeroed relative to video start. When first detection occurs at frame N>0, matching on timestamp magnitude pairs the wrong frames (N-frame offset).
+
+**Camera parameter reordering:** `KinematicReconstruction.updated_calibration` uses Calibration table order; keypoints use alphabetical SingleCameraVideo order. These differ — reorder explicitly before projection.
+
+See `rae:fetching-synchronized-data` for the complete pattern with camera reordering and contiguous segment selection.
 
 ---
 
@@ -254,3 +278,6 @@ LiftingPerson (method="Bridging_bml_movi_87")
 5. **Forgetting order_by** - Multi-camera queries need `order_by='camera_name'` for consistent ordering
 6. **Confusing MonocularReconstruction vs KinematicReconstruction** - Monocular uses FirebaseSession.AppVideo, Kinematic uses SessionCalibration.Recordings
 7. **Not filtering by video_project** - Queries across all projects mix different populations; always filter to your target cohort
+8. **Matching KR timestamps with VideoInfo timestamps** - Use `fetch_keypoints(only_detected=True)` instead; see Temporal Synchronization section
+9. **Assuming camera_params order matches keypoint order** - Calibration order != SingleCameraVideo alphabetical order; reorder explicitly
+10. **Zeroing timestamps manually** (`ts - ts[0]`) - Destroys physical time correspondence between data sources

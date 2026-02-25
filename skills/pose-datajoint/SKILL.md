@@ -1,6 +1,6 @@
 ---
 name: pose-datajoint
-description: Use when writing Python code to query biomechanics DataJoint tables - counting videos/sessions, filtering by video_project or participant_id/subject_id, fetching keypoints or kinematic reconstructions, understanding Session-Video relationships for both multi-camera and monocular pipelines
+description: Use when writing Python code to query biomechanics DataJoint tables - counting videos/sessions, filtering by video_project or participant_id/subject_id, fetching keypoints or kinematic reconstructions, synchronizing keypoints with qpos, understanding Session-Video relationships for both multi-camera and monocular pipelines
 ---
 
 # Pose DataJoint Query Reference
@@ -25,6 +25,7 @@ from multi_camera.datajoint.multi_camera_dj import (
     MultiCameraRecording, SingleCameraVideo, PersonKeypointReconstruction
 )
 from body_models.datajoint.kinematic_dj import KinematicReconstruction
+from body_models.datajoint.dataset import fetch_keypoints  # For synchronized KR+keypoint fetch
 
 # === MONOCULAR (PBL) ===
 from portable_biomechanics_sessions.emgimu_session import (
@@ -224,9 +225,36 @@ print(f"Monocular projects: {projects}")
 
 ---
 
+## Fetching Synchronized Keypoints + Reconstruction (MMC)
+
+When you need 2D keypoints aligned frame-by-frame with KR qpos, use `fetch_keypoints`:
+
+```python
+from body_models.datajoint.dataset import fetch_keypoints as bm_fetch_keypoints
+from body_models.datajoint.kinematic_dj import KinematicReconstruction
+
+trial_key = {'participant_id': '104', 'session_date': date(2023, 7, 21),
+             'recording_timestamps': '2023-07-21 14:06:37'}
+full_key = {**trial_key, 'kinematic_reconstruction_settings_num': 137}
+
+qpos = (KinematicReconstruction.Trial & full_key).fetch1('qpos')  # (T, 41)
+timestamps, kp_raw = bm_fetch_keypoints(trial_key, only_detected=True)
+# kp_raw: (C, T, 87, 3) — guaranteed qpos[i] matches kp_raw[:, i]
+
+assert qpos.shape[0] == kp_raw.shape[1]  # ALWAYS verify
+```
+
+**Do NOT** fetch keypoints via `TopDownPerson * VideoInfo` and match timestamps — this produces silent frame offsets. See `rae:fetching-synchronized-data` for the full pattern including camera parameter reordering and contiguous segment selection.
+
+---
+
 ## Shared Queries (Work for Both Pipelines)
 
-### Get 2D Keypoints
+### Get 2D Keypoints (Standalone, No KR Alignment)
+
+**For keypoints aligned with KR qpos**, use the synchronized pattern above.
+
+For standalone 2D analysis (no KR alignment needed):
 ```python
 from pose_pipeline.pipeline import TopDownPerson
 
@@ -301,6 +329,8 @@ MonocularReconstruction (subject_id, project, session_start_time, method)
 | `fetch(unique=True)` | Use `np.unique(table.fetch('field'))` |
 | `create_virtual_module()` | Direct import from modules |
 | Mixing MMC Session with PBL Session | Import with alias: `Session as PBLSession` |
+| Matching KR timestamps with VideoInfo timestamps | Use `fetch_keypoints(only_detected=True)` for frame-aligned data |
+| Assuming `camera_params` matches keypoint camera order | Reorder from Calibration order to SingleCameraVideo alphabetical order |
 
 ---
 
