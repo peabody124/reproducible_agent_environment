@@ -8,7 +8,8 @@
   ],
 
   "features": {
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/node:1": {}
   },
 
   "onCreateCommand": "sudo apt-get update && sudo apt-get install -y git-lfs && sudo rm -rf /var/lib/apt/lists/* && (git lfs install || true)",

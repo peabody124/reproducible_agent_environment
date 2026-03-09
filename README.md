@@ -82,6 +82,11 @@ This creates the full RAE-compliant project structure: `src/` layout, `pyproject
   // Install RAE + full plugin suite after container creation
   "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/main/scripts/install-user.sh | bash",
 
+  // Node.js for excalidraw rendering (npx)
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {}
+  },
+
   // Required environment variables
   "containerEnv": {
     "RAE_VERSION": "main",

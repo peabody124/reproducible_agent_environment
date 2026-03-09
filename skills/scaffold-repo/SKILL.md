@@ -238,6 +238,7 @@ Both templates:
 - Install Claude Code, pyright, RAE plugin, and full plugin suite via `postCreateCommand`
 - Mount `~/.claude` for config persistence
 - Configure VSCode with ruff, Python testing, 120-char rulers
+- Include Node.js via `"ghcr.io/devcontainers/features/node:1": {}` (required for excalidraw rendering via npx)
 - No Dockerfile needed - everything via features and install script
 
 **Note:** Ensure `~/.claude` exists on the host before starting: `mkdir -p ~/.claude`
