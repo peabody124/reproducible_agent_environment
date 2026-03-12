@@ -42,7 +42,7 @@ Skills are available through the Claude Code plugin:
 | `/consult-guidelines` | Review relevant guidelines for current task |
 | `/scaffold-repo` | Create new repos with correct structure |
 | `/config-improvement` | Propose improvements to upstream RAE |
-| `/bead-driven-development` | Orchestrate planning + execution with beads tracking |
+| `/bead-driven-development` | Orchestrate planning + execution with beads tracking (optional, disabled by default) |
 | `/investigation` | Scaffold structured research in scratch/ |
 
 ### Domain-Specific Skills
@@ -69,3 +69,15 @@ When you discover a better pattern:
 1. Check plugin is installed: `/plugin list`
 2. Re-install the plugin if needed
 3. Restart Claude Code session
+
+### `git lfs install` fails in devcontainer with exit code 2
+
+If your `onCreateCommand` includes `git lfs install` and the repo has beads git hooks enabled (or other custom hooks), `git lfs install` will refuse to overwrite them and exit non-zero. This silently aborts the entire `onCreateCommand` chain, preventing `postCreateCommand` from ever running — making the container appear to hang.
+
+**Fix:** Use `git lfs install --force || true` instead of `git lfs install`:
+
+```jsonc
+"onCreateCommand": "sudo apt-get update && sudo apt-get install -y ... git-lfs && sudo rm -rf /var/lib/apt/lists/* && (git lfs install --force || true)"
+```
+
+`--force` overwrites conflicting hooks, and `|| true` ensures the build continues even if git-lfs setup fails for other reasons.

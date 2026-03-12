@@ -30,7 +30,7 @@ RAE is distributed as a Claude Code plugin. No files are added to your repos.
 curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/main/scripts/install-user.sh | bash
 ```
 
-This installs Claude Code (native binary), pyright, the RAE plugin, and the full recommended plugin suite (pyright-lsp, official Claude plugins, beads, superpowers).
+This installs Claude Code (native binary), pyright, the RAE plugin, and the recommended plugin suite (pyright-lsp, official Claude plugins, superpowers). Beads is disabled by default — see [Bead-Driven Development](#bead-driven-development-prerequisites) to enable it.
 
 ### Recommended Plugins
 
@@ -44,12 +44,12 @@ The install script installs all of these automatically. For manual installation:
 /plugin install code-simplifier@claude-plugin-directory
 /plugin install plugin-dev@claude-plugin-directory
 
-# Beads (bead-driven development)
-curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-/plugin marketplace add steveyegge/beads
-/plugin install beads
-bd setup claude
+# Beads (optional — disabled by default, see Bead-Driven Development section)
+# curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
+# curl -LsSf https://astral.sh/uv/install.sh | sh
+# /plugin marketplace add steveyegge/beads
+# /plugin install beads
+# bd setup claude
 
 # Superpowers (TDD enforcement, planning, review)
 /plugin marketplace add obra/superpowers-marketplace
@@ -98,6 +98,8 @@ This creates the full RAE-compliant project structure: `src/` layout, `pyproject
 
 The `install-user.sh` script handles everything: Claude Code, pyright, RAE plugin, and the full recommended plugin suite.
 
+**Note:** If you enable beads (or other custom git hooks) and use `git-lfs`, use `git lfs install --force || true` in your `onCreateCommand` to avoid hook conflicts that silently abort the container build. See [Troubleshooting](docs/USAGE.md#git-lfs-install-fails-in-devcontainer-with-exit-code-2).
+
 See `.devcontainer/` in this repo as the canonical reference.
 
 ## What's Included
@@ -111,7 +113,7 @@ See `.devcontainer/` in this repo as the canonical reference.
 | `deslop` | Clean AI-generated slop from code changes | Manual |
 | `consult-guidelines` | Review relevant guidelines for task | Manual |
 | `config-improvement` | Propose improvements upstream | Manual |
-| `bead-driven-development` | Orchestrate planning + execution with beads tracking | Manual |
+| `bead-driven-development` | Orchestrate planning + execution with beads tracking | Manual (optional, disabled by default) |
 | `investigation` | Scaffold structured research in scratch/ | Manual |
 | `datajoint-biomechanics-schema` | DataJoint pipeline schema reference | Auto — domain queries |
 | `pose-datajoint` | Python code patterns for DataJoint pose queries | Auto — domain queries |
@@ -133,7 +135,9 @@ RAE includes a `SessionStart` hook that automatically loads the core guidelines 
 
 ### Bead-Driven Development Prerequisites
 
-The `bead-driven-development` skill requires additional plugins (installed automatically by `install-user.sh`):
+Beads is **disabled by default** in `install-user.sh`. To enable it, uncomment the beads section in the install script, or install manually:
+
+The `bead-driven-development` skill requires additional plugins:
 
 ```bash
 # Install beads CLI and plugin

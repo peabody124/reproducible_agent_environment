@@ -36,7 +36,7 @@ Guidelines are bundled in `skills/enforce-guidelines/references/`:
 - `/consult-guidelines` — Review relevant guidelines for current task
 - `/scaffold-repo` — Initialize a new repository with correct structure
 - `/config-improvement` — Propose improvements to upstream RAE repo
-- `/bead-driven-development` — Orchestrate planning + execution with beads tracking
+- `/bead-driven-development` — Orchestrate planning + execution with beads tracking (optional, disabled by default)
 - `/investigation` — Scaffold structured research in scratch/
 - `/excalidraw` — Generate Excalidraw diagrams, render to PNG/SVG, visually verify
 

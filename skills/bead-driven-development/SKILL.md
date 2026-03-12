@@ -208,3 +208,4 @@ Phase 2: Invoke executing-plans + beads prompt
 ## See Also
 
 - `references/prompt-templates.md` - Exact copy-paste prompts for each skill
+- `references/install-beads.md` - Installation instructions when beads is not installed
