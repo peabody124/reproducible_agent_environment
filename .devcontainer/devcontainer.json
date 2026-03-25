@@ -1,17 +1,34 @@
 {
-  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "name": "Reproducible Agent Environment (GPU)",
 
-  "mounts": [
-    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
-  ],
+  "image": "nvidia/cuda:12.6.0-cudnn-devel-ubuntu24.04",
 
   "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "username": "vscode",
+      "installZsh": true
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11"
+    },
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers/features/node:1": {}
   },
 
-  "onCreateCommand": "sudo apt-get update && sudo apt-get install -y git-lfs && sudo rm -rf /var/lib/apt/lists/* && (git lfs install || true)",
+  "mounts": [
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached",
+    "source=/mnt/CottonLab/datasets,target=/mnt/CottonLab/datasets,type=bind,readonly"
+  ],
+
+  "onCreateCommand": "sudo apt-get update && sudo apt-get install -y libgl1 libglib2.0-0 git-lfs && sudo rm -rf /var/lib/apt/lists/* && (git lfs install || true)",
   "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/${RAE_VERSION:-main}/scripts/install-user.sh | bash",
+
+  "containerEnv": {
+    "RAE_VERSION": "main",
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",
+    "ENABLE_LSP_TOOL": "1",
+    "CUDA_DEVICE_ORDER": "PCI_BUS_ID"
+  },
 
   "customizations": {
     "vscode": {
@@ -20,6 +37,7 @@
         "ms-python.vscode-pylance",
         "charliermarsh.ruff",
         "tamasfe.even-better-toml",
+        "ms-toolsai.jupyter",
         "github.copilot"
       ],
       "settings": {
@@ -31,17 +49,17 @@
         },
         "ruff.format.args": [],
         "ruff.lint.args": [],
-        "editor.rulers": [120]
+        "editor.rulers": [120],
+        "editor.insertSpaces": true,
+        "editor.tabSize": 4,
+        "editor.detectIndentation": false,
+        "python.testing.pytestPath": "/usr/local/bin/pytest",
+        "python.testing.pytestEnabled": true
       }
     }
   },
 
-  "containerEnv": {
-    "RAE_VERSION": "main",
-    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",
-    "ENABLE_LSP_TOOL": "1",
-    "CUDA_DEVICE_ORDER": "PCI_BUS_ID"
-  },
+  "runArgs": ["--env-file", ".env", "--gpus", "all"],
 
   "remoteUser": "vscode"
 }

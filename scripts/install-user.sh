@@ -158,7 +158,34 @@ echo "==> Beads (disabled by default, uncomment in install-user.sh to enable)"
 #     echo "    bd not found — beads hooks not configured"
 # fi
 
-# 8. Install superpowers (marketplace + plugin)
+# 8. Install Hugging Face skills (hf-cli for model/dataset operations)
+echo ""
+echo "==> Installing Hugging Face skills..."
+if command -v claude &> /dev/null; then
+    claude plugin marketplace add huggingface/skills 2>/dev/null || true
+    if claude plugin install hf-cli@huggingface/skills --scope user 2>/dev/null; then
+        echo "    ✓ hf-cli skill installed"
+    else
+        echo "    hf-cli skill already installed or unavailable"
+    fi
+else
+    echo "    Claude Code CLI not found, skipping HF skills"
+fi
+
+# Install hf CLI tool (requires huggingface_hub)
+echo ""
+echo "==> Checking hf CLI..."
+if command -v hf &> /dev/null; then
+    echo "    ✓ hf CLI already installed"
+elif command -v uv &> /dev/null; then
+    uv tool install 'huggingface_hub[cli]' 2>/dev/null && echo "    ✓ hf CLI installed via uv" || echo "    hf CLI install via uv failed"
+elif command -v pip &> /dev/null; then
+    pip install 'huggingface_hub[cli]' 2>/dev/null && echo "    ✓ hf CLI installed via pip" || echo "    hf CLI install failed"
+else
+    echo "    Neither uv nor pip found, skipping hf CLI install"
+fi
+
+# 9. Install superpowers (marketplace + plugin)
 echo ""
 echo "==> Installing superpowers..."
 if command -v claude &> /dev/null; then
@@ -182,6 +209,7 @@ echo "║  - Plugin: rae@rae-marketplace                          ║"
 echo "║  - Plugin: pyright-lsp@claude-plugins-official          ║"
 echo "║  - Plugins: code-review, feature-dev,                   ║"
 echo "║    code-simplifier, plugin-dev (official Claude)        ║"
+echo "║  - Skill: hf-cli@huggingface/skills + hf CLI            ║"
 echo "║  - Plugin: beads (disabled — see install-user.sh)        ║"
 echo "║  - Plugin: superpowers@superpowers-marketplace          ║"
 echo "║                                                         ║"

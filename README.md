@@ -30,7 +30,7 @@ RAE is distributed as a Claude Code plugin. No files are added to your repos.
 curl -fsSL https://raw.githubusercontent.com/peabody124/reproducible_agent_environment/main/scripts/install-user.sh | bash
 ```
 
-This installs Claude Code (native binary), pyright, the RAE plugin, and the recommended plugin suite (pyright-lsp, official Claude plugins, superpowers). Beads is disabled by default — see [Bead-Driven Development](#bead-driven-development-prerequisites) to enable it.
+This installs Claude Code (native binary), pyright, the RAE plugin, and the recommended plugin suite (pyright-lsp, official Claude plugins, Hugging Face hf-cli, superpowers). Beads is disabled by default — see [Bead-Driven Development](#bead-driven-development-prerequisites) to enable it.
 
 ### Recommended Plugins
 
@@ -51,9 +51,23 @@ The install script installs all of these automatically. For manual installation:
 # /plugin install beads
 # bd setup claude
 
+# Hugging Face skills (hf-cli for model/dataset operations)
+/plugin marketplace add huggingface/skills
+/plugin install hf-cli@huggingface/skills
+
 # Superpowers (TDD enforcement, planning, review)
 /plugin marketplace add obra/superpowers-marketplace
 /plugin install superpowers@superpowers-marketplace
+```
+
+The `hf-cli` skill also requires the Hugging Face CLI tool:
+
+```bash
+# Via uv (preferred)
+uv tool install 'huggingface_hub[cli]'
+
+# Or via pip
+pip install 'huggingface_hub[cli]'
 ```
 
 ### Scaffolding a New Project
