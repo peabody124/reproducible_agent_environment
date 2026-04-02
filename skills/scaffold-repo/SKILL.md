@@ -205,7 +205,25 @@ git commit -m "feat: Initialize {name} with RAE structure"
 - You MUST NOT commit if already in a git repo with uncommitted changes
 - You SHOULD offer to commit but confirm with user first
 
-### 8. Verify Structure
+### 8. Create CLAUDE.md
+
+Create a `CLAUDE.md` with project-specific instructions. If the project uses DataJoint, **always** include this section:
+
+```markdown
+## CRITICAL: NEVER Modify Database Entries
+
+**DO NOT update, delete, or alter any DataJoint database entries.** This includes:
+- `update1()`, `delete()`, `drop()` on any table
+- Modifying settings lookup tables (KinematicReconstructionSettingsLookup, ProbabilisticReconstructionSettingsLookup, KineticReconstructionSettingsLookup, KeypointSet, etc.)
+- Altering any computed table entries
+
+Database entries are shared state used by the entire lab. Changing a settings entry changes it for everyone and invalidates prior results computed with those settings.
+```
+
+- You MUST include this section if datajoint is in the project's dependencies
+- You SHOULD include it by default for any biomechanics/motion-capture project
+
+### 9. Verify Structure
 
 ```bash
 ruff format .
@@ -217,7 +235,7 @@ pytest
 - You MUST run ruff check with no errors
 - You MUST run pytest with all tests passing
 
-### 9. (Optional) Add Devcontainer
+### 10. (Optional) Add Devcontainer
 
 If the user wants devcontainer support, ask which template to use:
 

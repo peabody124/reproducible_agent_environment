@@ -49,6 +49,15 @@ Guidelines are bundled in `skills/enforce-guidelines/references/`:
 - `/camera-model` — Camera projections, intrinsics/extrinsics, triangulation, mm/m unit conventions
 - `/gait-lab-dataset` — Clinical gait lab schema, video-mocap sync, MMC-GaitLab trial matching
 
+## CRITICAL: NEVER Modify Database Entries
+
+**DO NOT update, delete, or alter any DataJoint database entries.** This includes:
+- `update1()`, `delete()`, `drop()` on any table
+- Modifying settings lookup tables (KinematicReconstructionSettingsLookup, ProbabilisticReconstructionSettingsLookup, KineticReconstructionSettingsLookup, KeypointSet, etc.)
+- Altering any computed table entries
+
+Database entries are shared state used by the entire lab. Changing a settings entry changes it for everyone and invalidates prior results computed with those settings.
+
 ## Tech Stack Preferences
 
 - Python with `uv` for package management

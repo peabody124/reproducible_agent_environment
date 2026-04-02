@@ -5,6 +5,15 @@ description: Use when writing Python code to query biomechanics DataJoint tables
 
 # Pose DataJoint Query Reference
 
+## CRITICAL: NEVER Modify Database Entries
+
+**DO NOT update, delete, or alter any DataJoint database entries.** This includes:
+- `update1()`, `delete()`, `drop()` on any table
+- Modifying settings lookup tables (KinematicReconstructionSettingsLookup, ProbabilisticReconstructionSettingsLookup, KineticReconstructionSettingsLookup, KeypointSet, etc.)
+- Altering any computed table entries
+
+Database entries are shared state used by the entire lab. Changing a settings entry changes it for everyone and invalidates prior results computed with those settings.
+
 ## Overview
 
 The biomechanics pipeline has **two parallel systems**:

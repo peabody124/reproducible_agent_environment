@@ -45,6 +45,15 @@ These patterns indicate AI-generated code that needs cleanup. Use the `/deslop` 
 - Redundant validation of internal state
 - Re-exporting types that aren't used externally
 
+## Database Mutation
+
+- Calling `update1()`, `delete()`, or `drop()` on any DataJoint table
+- Modifying settings lookup tables (KinematicReconstructionSettingsLookup, ProbabilisticReconstructionSettingsLookup, KineticReconstructionSettingsLookup, KeypointSet, etc.)
+- Altering computed table entries
+- Using `insert()` on shared tables without explicit user authorization
+
+**Rule:** Database entries are shared lab state. Mutations change results for everyone and invalidate prior computations. Read-only access only.
+
 ## Backwards-Compatibility Hacks
 
 - Renaming unused variables to `_var`
