@@ -39,6 +39,7 @@ Guidelines are bundled in `skills/enforce-guidelines/references/`:
 - `/bead-driven-development` — Orchestrate planning + execution with beads tracking (optional, disabled by default)
 - `/investigation` — Scaffold structured research in scratch/
 - `/excalidraw` — Generate Excalidraw diagrams, render to PNG/SVG, visually verify
+- `/semi-formal-code-reasoning` — Structured reasoning templates for patch equivalence, fault localization, code QA, and code review
 
 ### Domain-Specific
 - `/datajoint-biomechanics-schema` — DataJoint pipeline schema reference
