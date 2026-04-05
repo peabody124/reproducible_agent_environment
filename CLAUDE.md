@@ -40,6 +40,7 @@ Guidelines are bundled in `skills/enforce-guidelines/references/`:
 - `/investigation` — Scaffold structured research in scratch/
 - `/excalidraw` — Generate Excalidraw diagrams, render to PNG/SVG, visually verify
 - `/semi-formal-code-reasoning` — Structured reasoning templates for patch equivalence, fault localization, code QA, and code review
+- `/github-activity-review` — Periodic cross-repo GitHub activity review with thematic organization
 
 ### Domain-Specific
 - `/datajoint-biomechanics-schema` — DataJoint pipeline schema reference
