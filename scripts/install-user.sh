@@ -199,6 +199,36 @@ else
     echo "    Claude Code CLI not found, skipping superpowers plugin"
 fi
 
+# 10. Configure W&B MCP server (if WANDB_API_KEY is available)
+echo ""
+echo "==> Checking W&B MCP server..."
+# Check for WANDB_API_KEY in environment or .env file
+WANDB_KEY="${WANDB_API_KEY:-}"
+if [ -z "$WANDB_KEY" ] && [ -f .env ]; then
+    WANDB_KEY=$(grep -E '^WANDB_API_KEY=' .env 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d "'")
+fi
+if [ -z "$WANDB_KEY" ] && [ -f ../.env ]; then
+    WANDB_KEY=$(grep -E '^WANDB_API_KEY=' ../.env 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d "'")
+fi
+
+if [ -n "$WANDB_KEY" ] && command -v claude &> /dev/null; then
+    if claude mcp add --transport http wandb "https://mcp.withwandb.com/mcp" \
+        --scope user --header "Authorization: Bearer $WANDB_KEY" 2>/dev/null; then
+        echo "    ✓ W&B MCP server configured (hosted)"
+    else
+        echo "    W&B MCP server already configured or setup failed"
+    fi
+else
+    if [ -z "$WANDB_KEY" ]; then
+        echo "    WANDB_API_KEY not found in environment or .env — skipping"
+        echo "    Set WANDB_API_KEY and re-run, or manually:"
+        echo "      claude mcp add --transport http wandb https://mcp.withwandb.com/mcp \\"
+        echo "        --scope user --header \"Authorization: Bearer \$WANDB_API_KEY\""
+    else
+        echo "    Claude Code CLI not found, skipping W&B MCP server"
+    fi
+fi
+
 echo ""
 echo "╔══════════════════════════════════════════════════════════╗"
 echo "║  RAE User Installation Complete!                        ║"
@@ -212,6 +242,7 @@ echo "║    code-simplifier, plugin-dev (official Claude)        ║"
 echo "║  - Skill: hf-cli@huggingface/skills + hf CLI            ║"
 echo "║  - Plugin: beads (disabled — see install-user.sh)        ║"
 echo "║  - Plugin: superpowers@superpowers-marketplace          ║"
+echo "║  - MCP: wandb (if WANDB_API_KEY found)                 ║"
 echo "║                                                         ║"
 echo "║  No files were added to the current directory.          ║"
 echo "║                                                         ║"

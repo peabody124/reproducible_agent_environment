@@ -1,7 +1,7 @@
 {
   "name": "rae",
   "description": "Reproducible Agent Environment: 14 skills for coding standards enforcement, quality gates, repo scaffolding, semi-formal code reasoning, GitHub activity review, and domain-specific development (biomechanics, DataJoint, gait analysis, camera models)",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "author": {
     "name": "James Cotton"
   },
