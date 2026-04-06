@@ -11,13 +11,8 @@ These are mandatory standards for Python development. Violations require correct
 - MUST run `ruff check <file>` before handing off work
 - When in doubt: `ruff format . && ruff check --fix . && ruff check .`
 
-**Ruff configuration** (in pyproject.toml):
-
-```toml
-[tool.ruff]
-line-length = 120
-target-version = "py311"
-```
+**Ruff configuration:** See `templates/pyproject.toml` in the RAE plugin for the canonical
+ruff config. Use `/audit-repo` to check if a repo's config has drifted.
 
 ## Type Hints
 
@@ -130,19 +125,8 @@ def add_numbers(a: int, b: int) -> int:
 - Test functions named `test_*`
 - Use fixtures in `conftest.py` for shared setup
 
-**Coverage configuration** (in pyproject.toml):
-
-```toml
-[tool.pytest.ini_options]
-addopts = ["--cov=src", "--cov-report=term-missing", "--cov-branch"]
-
-[tool.coverage.run]
-omit = ["*/__init__.py", "*/tests/*", "*/config.py"]
-
-[tool.coverage.report]
-fail_under = 80
-show_missing = true
-```
+**Coverage configuration:** See `templates/pyproject.toml` in the RAE plugin for the
+canonical pytest and coverage config. Key requirement: `fail_under = 80`.
 
 See `references/coding-standards.md` for TDD requirements.
 

@@ -20,119 +20,21 @@ project-root/
 
 ## pyproject.toml Structure
 
-### Build System
+The canonical pyproject.toml template lives at `templates/pyproject.toml` in the RAE plugin.
+That file is the **single source of truth** for all tool configuration (ruff, pytest, coverage).
+Use `/audit-repo` to check an existing repo against it.
 
-MUST use modern Python packaging:
+Key requirements (see the template for exact config):
 
-```toml
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-```
+- **Build system:** hatchling
+- **Python:** >=3.11
+- **Dev dependencies:** pytest, pytest-cov, ruff MUST go in `[project.optional-dependencies] dev`, never in main `dependencies`
+- **Ruff:** line-length = 120, target-version = py311, full lint rule set (E, W, F, I, B, C4, UP, ARG, SIM)
+- **Pytest:** pythonpath = ["src"], coverage via --cov addopts
+- **Coverage:** fail_under = 80
 
-### Project Metadata
-
-```toml
-[project]
-name = "your-project-name"
-version = "0.1.0"
-description = "Clear, concise description"
-readme = "README.md"
-requires-python = ">=3.11"
-license = "MIT"
-authors = [
-    { name = "Your Name", email = "you@example.com" }
-]
-dependencies = []
-```
-
-### Dependency Organization
-
-MUST separate dependencies by purpose:
-
-```toml
-[project.optional-dependencies]
-# Development tools - ALWAYS in dev, never in main dependencies
-dev = [
-    "pytest>=8.0",
-    "pytest-cov>=4.0",
-    "ruff>=0.8",
-]
-
-# Optional heavy dependencies - let users choose variants
-# Example: OpenCV has multiple distributions
-opencv = ["opencv-python>=4.0.0"]
-opencv-headless = ["opencv-python-headless>=4.0.0"]
-opencv-contrib = ["opencv-contrib-python>=4.0.0"]
-```
-
-**Dependency Rules:**
-
-- MUST NOT put pytest, ruff, or other dev tools in main `dependencies`
-- MUST put testing tools in `dev` optional dependencies
-- MUST offer variant optional dependencies for libraries with multiple distributions (OpenCV, PyTorch CPU/GPU)
-- SHOULD pin minimum versions, not exact versions
-
-### Ruff Configuration
-
-MUST configure ruff with 120-character line length:
-
-```toml
-[tool.ruff]
-line-length = 120
-target-version = "py311"
-src = ["src", "tests"]
-
-[tool.ruff.lint]
-select = [
-    "E",      # pycodestyle errors
-    "W",      # pycodestyle warnings
-    "F",      # Pyflakes
-    "I",      # isort
-    "B",      # flake8-bugbear
-    "C4",     # flake8-comprehensions
-    "UP",     # pyupgrade
-    "ARG",    # flake8-unused-arguments
-    "SIM",    # flake8-simplify
-]
-ignore = [
-    "E501",   # line too long (handled by formatter)
-]
-
-[tool.ruff.lint.isort]
-known-first-party = ["your_package"]
-
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
-```
-
-### Pytest and Coverage Configuration
-
-```toml
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-pythonpath = ["src"]
-addopts = [
-    "-ra",
-    "-q",
-    "--strict-markers",
-    "--cov=src",
-    "--cov-report=term-missing",
-    "--cov-branch",
-]
-
-[tool.coverage.run]
-omit = [
-    "*/__init__.py",    # Often empty imports
-    "*/tests/*",        # Don't track coverage of the tests themselves
-    "*/config.py",      # Configuration often hard to test
-]
-
-[tool.coverage.report]
-fail_under = 80
-show_missing = true
-```
+MUST NOT put dev tools in main dependencies. SHOULD pin minimum versions, not exact versions.
+MUST offer variant optional dependencies for libraries with multiple distributions (OpenCV, PyTorch CPU/GPU).
 
 ## Directory Conventions
 

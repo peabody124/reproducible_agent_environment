@@ -7,24 +7,17 @@
 
 ## Guidelines
 
-You MUST consult and follow these guidelines. This is not optional.
+You MUST consult and follow the guidelines in `skills/enforce-guidelines/references/`.
+The `/enforce-guidelines` skill activates automatically before code tasks.
 
-Guidelines are bundled in `skills/enforce-guidelines/references/`:
-
-- `skills/enforce-guidelines/references/coding-standards.md` — Core development practices (TDD, DRY, fail-fast)
-- `skills/enforce-guidelines/references/python-standards.md` — Python-specific rules (ruff 120 chars, typing, paths)
-- `skills/enforce-guidelines/references/repo-structure.md` — Repository layout and pyproject.toml requirements
-- `skills/enforce-guidelines/references/git-workflow.md` — Git discipline and commit standards
-- `skills/enforce-guidelines/references/anti-patterns.md` — What to avoid ("slop")
-
-**Before any code task:** Consult applicable guidelines. See `/enforce-guidelines` for the required process.
+The **single source of truth** for tool configuration (ruff, pytest, coverage) is
+`templates/pyproject.toml`. Use `/audit-repo` to check if a repo has drifted from it.
 
 ## Workflow
 
-1. Before starting work: Run `/enforce-guidelines` to identify applicable standards
-2. During work: Cite guidelines when they influence decisions
-3. Before commits: Run `/deslop` to clean AI artifacts
-4. After completion: Verify with `ruff format . && ruff check . && pytest`
+1. During work: Follow guidelines in `skills/enforce-guidelines/references/`
+2. Before commits: Run `/deslop` to clean AI artifacts
+3. After completion: Verify with `ruff format . && ruff check . && pytest`
 
 ## Available Skills
 
@@ -35,6 +28,7 @@ Guidelines are bundled in `skills/enforce-guidelines/references/`:
 - `/deslop` — Clean AI-generated slop from staged changes
 - `/consult-guidelines` — Review relevant guidelines for current task
 - `/scaffold-repo` — Initialize a new repository with correct structure
+- `/audit-repo` — Check current repo against RAE standards, report drift, fix gaps
 - `/config-improvement` — Propose improvements to upstream RAE repo
 - `/bead-driven-development` — Orchestrate planning + execution with beads tracking (optional, disabled by default)
 - `/investigation` — Scaffold structured research in scratch/
@@ -53,17 +47,6 @@ Guidelines are bundled in `skills/enforce-guidelines/references/`:
 
 ## CRITICAL: NEVER Modify Database Entries
 
-**DO NOT update, delete, or alter any DataJoint database entries.** This includes:
-- `update1()`, `delete()`, `drop()` on any table
-- Modifying settings lookup tables (KinematicReconstructionSettingsLookup, ProbabilisticReconstructionSettingsLookup, KineticReconstructionSettingsLookup, KeypointSet, etc.)
-- Altering any computed table entries
-
-Database entries are shared state used by the entire lab. Changing a settings entry changes it for everyone and invalidates prior results computed with those settings.
-
-## Tech Stack Preferences
-
-- Python with `uv` for package management
-- JAX/jaxtyping for numerical work
-- pytest for testing (in dev dependencies, not main)
-- Strict `src/` and `tests/` layout
-- ruff for formatting and linting (line-length = 120)
+See `skills/enforce-guidelines/references/coding-standards.md` for the full rule.
+In short: **DO NOT** call `update1()`, `delete()`, `drop()` on any DataJoint table.
+Database entries are shared lab state.

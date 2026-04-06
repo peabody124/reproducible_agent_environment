@@ -12,6 +12,16 @@
 - Clear commit messages describing "why" not just "what"
 - No debug code, print statements, or scratch files in commits
 
+## Formatting-Only Commits
+
+When running `ruff format` or `ruff check --fix` triggers a large number of whitespace
+or style changes across files, those formatting changes MUST be committed separately
+from meaningful logic changes. This keeps diffs reviewable and `git blame` useful.
+
+- Run formatting first, commit as `style: ruff format` or `style: apply ruff fixes`
+- Then make your logic changes in a separate commit
+- If only a few lines of formatting are interleaved with your changes, a single commit is fine
+
 ## Pre-Commit Checklist
 
 Before every commit:

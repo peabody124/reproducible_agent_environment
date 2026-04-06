@@ -49,61 +49,15 @@ touch tests/__init__.py
 
 ### 3. Create pyproject.toml
 
-```toml
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+Copy the canonical template from `templates/pyproject.toml` in the RAE plugin and customize:
+- Replace `your-project-name` with `{name}`
+- Replace `your_package` with `{package_name}`
+- Replace author name/email
+- Set the project description
+- Add any project-specific dependencies
 
-[project]
-name = "{name}"
-version = "0.1.0"
-description = "{description}"
-readme = "README.md"
-requires-python = ">=3.11"
-license = "MIT"
-authors = [
-    { name = "{author}", email = "your@email.com" }
-]
-dependencies = []
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.0",
-    "pytest-cov>=4.0",
-    "ruff>=0.8",
-]
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/{package_name}"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-pythonpath = ["src"]
-addopts = ["-ra", "-q", "--strict-markers", "--cov=src", "--cov-report=term-missing", "--cov-branch"]
-
-[tool.coverage.run]
-omit = ["*/__init__.py", "*/tests/*", "*/config.py"]
-
-[tool.coverage.report]
-fail_under = 80
-show_missing = true
-
-[tool.ruff]
-line-length = 120
-target-version = "py311"
-src = ["src", "tests"]
-
-[tool.ruff.lint]
-select = ["E", "W", "F", "I", "B", "C4", "UP", "ARG", "SIM"]
-ignore = ["E501"]
-
-[tool.ruff.lint.isort]
-known-first-party = ["{package_name}"]
-
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
-```
+The template is the **single source of truth** for ruff, pytest, and coverage config.
+Do not hardcode these values — always read from the template file.
 
 - You MUST set line-length = 120
 - You MUST put pytest and ruff in dev optional-dependencies
@@ -258,6 +212,11 @@ Both templates:
 - Configure VSCode with ruff, Python testing, 120-char rulers
 - Include Node.js via `"ghcr.io/devcontainers/features/node:1": {}` (required for excalidraw rendering via npx)
 - No Dockerfile needed - everything via features and install script
+
+**Beads (bead-driven development):**
+Ask the user whether they want beads enabled for this project. Beads is **off by default**.
+Only enable if the user explicitly opts in. If enabled, add the beads plugin to the
+devcontainer's postCreateCommand install list.
 
 **Note:** Ensure `~/.claude` exists on the host before starting: `mkdir -p ~/.claude`
 
