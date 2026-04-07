@@ -47,9 +47,9 @@ if command -v claude &> /dev/null; then
     fi
 
     # Install plugin, or update if already installed
-    if claude plugin install rae@rae-marketplace --scope user 2>/dev/null; then
+    if claude plugin install rae@reproducible_agent_environment --scope user 2>/dev/null; then
         echo "    ✓ RAE plugin installed"
-    elif claude plugin update rae@rae-marketplace 2>/dev/null; then
+    elif claude plugin update rae@reproducible_agent_environment 2>/dev/null; then
         echo "    ✓ RAE plugin updated"
     else
         echo "    RAE plugin install/update failed"
@@ -58,7 +58,7 @@ else
     echo "    Claude Code CLI not found"
     echo "    After installing, run these commands in Claude Code:"
     echo "      /plugin marketplace add $RAE_REPO_ID"
-    echo "      /plugin install rae@rae-marketplace"
+    echo "      /plugin install rae@reproducible_agent_environment"
 fi
 
 # 3. Install uv (needed by pyright and general Python tooling)
@@ -235,7 +235,7 @@ echo "║  RAE User Installation Complete!                        ║"
 echo "║                                                         ║"
 echo "║  Installed:                                             ║"
 echo "║  - Claude Code CLI (native binary)                      ║"
-echo "║  - Plugin: rae@rae-marketplace                          ║"
+echo "║  - Plugin: rae@reproducible_agent_environment           ║"
 echo "║  - Plugin: pyright-lsp@claude-plugins-official          ║"
 echo "║  - Plugins: code-review, feature-dev,                   ║"
 echo "║    code-simplifier, plugin-dev (official Claude)        ║"
