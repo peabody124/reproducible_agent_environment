@@ -21,7 +21,7 @@ RAE is distributed as a Claude Code plugin. No files are added to your repos.
 
 ```
 /plugin marketplace add peabody124/reproducible_agent_environment
-/plugin install rae@rae-marketplace
+/plugin install rae@reproducible_agent_environment
 ```
 
 **Scripted (one-liner):**
