@@ -37,11 +37,13 @@ mkdir -p ~/.claude  # On host machine
 **Features:**
 - Base image: `nvidia/cuda:12.6.0-cudnn-devel-ubuntu24.04`
 - GPU access via `--gpus all`
-- OpenCV dependencies (libgl1, libglib2.0-0)
+- OpenCV / headless rendering dependencies (`libgl1`, `libegl1`, `libglib2.0-0`)
 - Git LFS for large model files
 - Jupyter notebook support
 - Project auto-install: `pip install -e '.[dev]'`
 - Claude Code auto-install via `postCreateCommand`
+
+If a project renders with PyOpenGL in headless mode (`PYOPENGL_PLATFORM=egl`), keep `libegl1` in the devcontainer so `libEGL.so.1` is available.
 
 **Setup:**
 ```bash

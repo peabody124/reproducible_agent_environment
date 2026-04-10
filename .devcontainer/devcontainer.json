@@ -20,7 +20,7 @@
     "source=/mnt/CottonLab/datasets,target=/mnt/CottonLab/datasets,type=bind,readonly"
   ],
 
-  "onCreateCommand": "sudo apt-get update && sudo apt-get install -y libgl1 libglib2.0-0 libosmesa6-dev git-lfs && sudo rm -rf /var/lib/apt/lists/* && (git lfs install || true)",
+  "onCreateCommand": "sudo apt-get update && sudo apt-get install -y libgl1 libegl1 libglib2.0-0 libosmesa6-dev git-lfs && sudo rm -rf /var/lib/apt/lists/* && (git lfs install || true)",
   "postCreateCommand": "./scripts/install-user.sh",
 
   "containerEnv": {
