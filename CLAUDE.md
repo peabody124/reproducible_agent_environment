@@ -42,6 +42,7 @@ The **single source of truth** for tool configuration (ruff, pytest, coverage) i
 - `/fetching-synchronized-data` — Temporal alignment of keypoints with kinematic reconstruction
 - `/gait-metrics` — Gait analysis: walking segments, spatiotemporal metrics, GDI
 - `/jax-config` — JAX/Equinox-compatible config setup with pytree registration and tyro CLI
+- `/jax-memory-and-retracing` — Diagnose/avoid GPU & host OOMs, memory leaks, and JIT retracing in JAX/Equinox
 - `/camera-model` — Camera projections, intrinsics/extrinsics, triangulation, mm/m unit conventions
 - `/gait-lab-dataset` — Clinical gait lab schema, video-mocap sync, MMC-GaitLab trial matching
 

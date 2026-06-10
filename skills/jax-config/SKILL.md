@@ -144,6 +144,7 @@ of the same file, immediately after the dataclass definitions.
 
 ## References
 
+- `rae:jax-memory-and-retracing` — Diagnosing OOMs, memory leaks, and JIT retracing at runtime (the diagnosis-side complement to this skill's design-time rules)
 - `references/pytree-registration.md` — Full pattern for registering configs as JAX pytrees
 - `references/tyro-integration.md` — CLI configuration with tyro + JAX pytree configs
 - `enforce-guidelines/references/python-standards.md` — Python coding standards
