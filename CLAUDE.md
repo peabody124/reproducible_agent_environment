@@ -44,6 +44,7 @@ The **single source of truth** for tool configuration (ruff, pytest, coverage) i
 - `/jax-config` — JAX/Equinox-compatible config setup with pytree registration and tyro CLI
 - `/jax-memory-and-retracing` — Diagnose/avoid GPU & host OOMs, memory leaks, and JIT retracing in JAX/Equinox
 - `/camera-model` — Camera projections, intrinsics/extrinsics, triangulation, mm/m unit conventions
+- `/efficient-rendering` — Fast, correct rendering of meshes/point clouds/overlays: EGL headless GPU, OpenCV↔GL conventions, distortion strategies, chunked JAX rasterizers, video compositing
 - `/gait-lab-dataset` — Clinical gait lab schema, video-mocap sync, MMC-GaitLab trial matching
 
 ## CRITICAL: NEVER Modify Database Entries
