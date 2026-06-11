@@ -54,6 +54,20 @@ os.environ.setdefault("PYOPENGL_PLATFORM", "egl")  # MUST precede any GL import
 import pyrender
 ```
 
+**MuJoCo uses its own backend switch.** When rendering MuJoCo geometry (e.g.
+`mujoco.Renderer`), MuJoCo reads `MUJOCO_GL`, not `PYOPENGL_PLATFORM`. Set
+`MUJOCO_GL=egl` (the unset/`glfw` default needs a display and dies headless;
+`osmesa` is the CPU path). Set both before any import so a process that mixes a
+MuJoCo renderer and a pyrender overlay routes both through hardware EGL:
+
+```python
+os.environ.setdefault("MUJOCO_GL", "egl")
+os.environ.setdefault("PYOPENGL_PLATFORM", "egl")
+```
+
+Setting the env var alone does **not** pin a GPU — see the next paragraph. The
+`llvmpipe` verification below is just as necessary for the MuJoCo path.
+
 **Pin a GPU — but do not assume the EGL device index equals the CUDA index.**
 EGL device order does *not* match `nvidia-smi` / `CUDA_VISIBLE_DEVICES` order,
 and there is no reliable EGL→card mapping. So don't set `EGL_DEVICE_ID` to a
@@ -405,7 +419,8 @@ recompiles.
 
 ## Pre-flight checklist
 
-- [ ] `PYOPENGL_PLATFORM=egl` set **before** any GL import.
+- [ ] `PYOPENGL_PLATFORM=egl` (and `MUJOCO_GL=egl` if rendering MuJoCo) set
+      **before** any GL import.
 - [ ] Verified `GL_RENDERER` is the NVIDIA GPU, not `llvmpipe`.
 - [ ] Renderer/context allocated once and reused; cleaned up at exit.
 - [ ] Exactly one OpenCV→GL flip, at the camera node.
@@ -422,6 +437,7 @@ recompiles.
 | Anti-pattern | Fix |
 |---|---|
 | Importing GL before setting `PYOPENGL_PLATFORM` | Set the env var first, at the very top |
+| Relying on `PYOPENGL_PLATFORM` for a MuJoCo renderer | MuJoCo reads `MUJOCO_GL`; set `MUJOCO_GL=egl` too |
 | Trusting it "works" without checking `GL_RENDERER` | Assert no `llvmpipe` at startup |
 | New `OffscreenRenderer` per frame | Cache by viewport size, reuse |
 | Distorting vertices *and* undistorting the image | Pick one strategy, apply consistently |

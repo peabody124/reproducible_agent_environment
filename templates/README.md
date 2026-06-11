@@ -43,7 +43,7 @@ mkdir -p ~/.claude  # On host machine
 - Project auto-install: `pip install -e '.[dev]'`
 - Claude Code auto-install via `postCreateCommand`
 
-If a project renders with PyOpenGL in headless mode (`PYOPENGL_PLATFORM=egl`), keep `libegl1` in the devcontainer so `libEGL.so.1` is available.
+If a project renders with PyOpenGL in headless mode (`PYOPENGL_PLATFORM=egl`), keep `libegl1` in the devcontainer so `libEGL.so.1` is available. The system library is only half of it — set `PYOPENGL_PLATFORM=egl` before any GL import, probe for a real GPU, and assert you didn't land on the `llvmpipe` CPU fallback. See the **`/efficient-rendering`** skill for the full runtime setup and rendering/camera patterns.
 
 **Setup:**
 ```bash

@@ -247,6 +247,19 @@ torch-cuda = ["torch>=2.0"]  # User installs with CUDA separately
 notebooks = ["jupyter>=1.0", "ipykernel>=6.0"]
 ```
 
+**Headless 3D rendering (meshes / point clouds / video overlays):**
+```toml
+[project.optional-dependencies]
+viz = ["pyrender>=0.1.45", "trimesh>=4.0", "PyOpenGL>=3.1", "opencv-python-headless>=4.0.0"]
+```
+This needs the EGL system libraries from the GPU devcontainer (`libgl1`,
+`libegl1`, `libosmesa6-dev`) — already in `templates/devcontainer-gpu`. At
+runtime the project must set `PYOPENGL_PLATFORM=egl` **before** importing any GL
+library and verify it didn't fall back to the `llvmpipe` CPU rasterizer. Point
+the user at the **`/efficient-rendering`** skill for the device-probing,
+context-reuse, camera-convention, and video-compositing patterns rather than
+re-deriving them here.
+
 ## Examples
 
 **User:** "/scaffold-repo my-analysis-tool A tool for analyzing motion capture data"
