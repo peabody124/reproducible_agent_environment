@@ -28,6 +28,7 @@ The **single source of truth** for tool configuration (ruff, pytest, coverage) i
 - `/deslop` — Clean AI-generated slop from staged changes
 - `/consult-guidelines` — Review relevant guidelines for current task
 - `/scaffold-repo` — Initialize a new repository with correct structure
+- `/golden-test-harness` — Self-generating golden/parity tests: config-driven harness regenerates goldens; `tests/golden/` is gitignored, not committed
 - `/audit-repo` — Check current repo against RAE standards, report drift, fix gaps
 - `/config-improvement` — Propose improvements to upstream RAE repo
 - `/bead-driven-development` — Orchestrate planning + execution with beads tracking (optional, disabled by default)

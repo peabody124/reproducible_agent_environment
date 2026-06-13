@@ -126,6 +126,7 @@ See `.devcontainer/` in this repo as the canonical reference.
 |-------|---------|------------|
 | `enforce-guidelines` | Ensures all work follows RAE guidelines | **Auto** — before any code task |
 | `scaffold-repo` | Initialize new repo with correct structure | Manual |
+| `golden-test-harness` | Self-generating golden/parity tests; goldens are generated, not committed | Manual |
 | `deslop` | Clean AI-generated slop from code changes | Manual |
 | `consult-guidelines` | Review relevant guidelines for task | Manual |
 | `config-improvement` | Propose improvements upstream | Manual |
