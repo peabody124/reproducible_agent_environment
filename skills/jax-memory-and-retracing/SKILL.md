@@ -290,6 +290,45 @@ while sleep 5; do free -m | awk '/Mem:/{print strftime("%T"), $3}'; done
   (drop references, then `jax.clear_caches()` if compiled variants pin them).
 - Host grows, GPU flat → section 4.
 
+### Reduce-after-fan-out: scan/chunk, never one wide `vmap`
+
+A common phase-OOM is a **fan-out you immediately reduce**: run the same model
+on `N` variants (augmentations, hypotheses, MC samples, ensemble members) and
+collapse the `N` outputs to a statistic (mean, std, max, top-k). The natural
+`jax.vmap(f)(variants)` materializes **all `N` forwards' activations at once**,
+so the peak scales with `N` even though the *result* is tiny. On a large model
+(a ViT/backbone × a real batch) a modest `N` (e.g. 8) is enough to exhaust the
+device — the failing allocation names the fan-out's executable and is
+`N`-proportional.
+
+The fix is to stream the fan-out and reduce online, so only `chunk` forwards
+co-reside:
+
+```python
+# WRONG — all N augmented forwards live at once; peak ∝ N.
+outs = jax.vmap(lambda k: model_forward(augment(x, k)))(keys)   # (N, B, ...)
+sigma = jnp.std(outs, axis=0)
+
+# RIGHT — lax.map over chunks; peak ∝ chunk, result identical.
+def chunk_fwd(ck):                       # ck: (chunk,) keys
+    return jax.vmap(lambda k: model_forward(augment(x, k)))(ck)
+outs = jax.lax.map(chunk_fwd, keys.reshape(n_chunks, chunk, *keys.shape[1:]))
+sigma = jnp.std(outs.reshape(-1, *outs.shape[2:])[:N], axis=0)
+```
+
+`chunk` is a pure memory↔throughput knob — it does **not** change the numerical
+result (same `N` samples), so set it small enough to fit the phase and leave `N`
+at whatever the statistic needs. For a true O(1)-peak reduction (no `(N, …)`
+stack at all), carry a running accumulator through `lax.scan` (e.g. Welford for
+mean/variance) instead of stacking then reducing.
+
+**Gotcha — a `chunk` default `>= N` silently collapses to the wide `vmap`.** If
+the chunking helper defaults `chunk` to the same value as the fan-out count (or
+the caller omits it), `n_chunks == 1` and `lax.map` runs a single group over all
+`N` — i.e. the exact wide `vmap` you were avoiding, with no error, just the OOM.
+Default `chunk` to a small constant (2–4), and treat `chunk >= N` as the
+unguarded wide-`vmap` case in the docstring so callers know it OOMs large models.
+
 ### Allocator hygiene
 
 ```bash
