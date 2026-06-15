@@ -130,6 +130,15 @@ canonical pytest and coverage config. Key requirement: `fail_under = 80`.
 
 See `references/coding-standards.md` for TDD requirements.
 
+### Golden & parity tests
+
+Tests that compare a port/refactor against a reference (PyTorch model, prior
+implementation, multi-view ground truth) follow extra rules: golden data is
+**generated, not committed** (`tests/golden/` is gitignored), torch-vs-jax
+comparisons run in **separate processes**, parity asserts **magnitude not just
+cosine**, and tracking parity uses **per-frame mask IoU + object count**. See
+`references/testing-standards.md` and the `/golden-test-harness` skill.
+
 ## Red Flags (Violations)
 
 These patterns indicate non-compliance:
