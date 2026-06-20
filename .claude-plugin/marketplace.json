@@ -8,8 +8,8 @@
     {
       "name": "rae",
       "source": "./",
-      "description": "Reproducible Agent Environment: 21 skills for coding standards enforcement, quality gates, repo scaffolding, repo auditing, golden/parity test harnesses, semi-formal code reasoning, GitHub activity review, JAX memory/retracing diagnosis, efficient rendering, and domain-specific development (biomechanics, DataJoint, gait analysis, camera models)",
-      "version": "1.8.0"
+      "description": "Reproducible Agent Environment: 27 skills for coding standards enforcement, quality gates, repo scaffolding, repo auditing, golden/parity test harnesses, semi-formal code reasoning, GitHub activity review, JAX memory/retracing diagnosis, JAX JIT/fusion hygiene, efficient rendering, and domain-specific development (biomechanics, DataJoint, gait analysis, camera models)",
+      "version": "1.9.0"
     }
   ]
 }

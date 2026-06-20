@@ -29,9 +29,8 @@ Three failure families:
 
 1. **Eager hot path** — an expensive forward (a ViT/backbone, a decode head) is
    called as a plain `model(x)` per item instead of through `eqx.filter_jit`.
-   Per-op Python dispatch dominates. *Worked example below: the MammaNet head ran
-   eager per-crop in production; wrapping it in `eqx.filter_jit` was **11x**
-   faster.*
+   Per-op Python dispatch dominates. *Worked example below: a deep ViT head called
+   eager once per input crop; wrapping it in `eqx.filter_jit` was ~**11x** faster.*
 2. **Under-fused** — the work *is* jitted, but split across many tiny jit calls
    (or a Python `for` loop calling a small jit per element), so XLA never sees
    enough to fuse and you pay a launch/dispatch tax per op or per iteration.
@@ -70,18 +69,19 @@ JAX's own guidance: **"give the XLA compiler as much code as possible, so it can
 fully optimize it"** ([jit-compilation guide](https://docs.jax.dev/en/latest/jit-compilation.html)).
 A bare `model(x)` gives XLA *nothing*.
 
-### Worked example — the MammaNet head (the anti-pattern that motivated this skill)
+### Worked example — a deep ViT head called eager per item
 
-The production front-end ran the MammaNet landmark head **eager, once per crop**,
-in a Python loop over (camera, frame) crops. Microbench, same GPU / same process,
-warm, `block_until_ready`:
+A common anti-pattern: a deep landmark/segmentation head called **eager, once per
+input crop**, in a Python loop over items (crops, frames, detections). A
+representative microbench of such a head — same GPU / same process, warm,
+`block_until_ready`:
 
 ```
-eager  model(image, mask):              137.9 ms/crop
-eqx.filter_jit(model)(image, mask):      12.5 ms/crop   ->  11.0x faster
+eager  model(image, mask):              ~138 ms/crop
+eqx.filter_jit(model)(image, mask):      ~12 ms/crop   ->  ~11x faster
 ```
 
-The fix was a one-liner — wrap the per-crop forward:
+The fix is a one-liner — wrap the per-item forward:
 
 ```python
 @eqx.filter_jit
@@ -89,10 +89,9 @@ def _jit_forward(model, image, mask):
     return model(image, mask)
 ```
 
-The crop shape is fixed `((3,512,384) image / (1,512,384) mask)`, so it **compiles
-once** and every subsequent crop reuses the fused executable. `filter_jit` caches
-on the model's static structure, so a stable model object across crops compiles
-exactly once. (See `BiomechMammaNetEqx/src/biomech_mamma_net_eqx/model/frontend.py`.)
+When the input shape is fixed across items, it **compiles once** and every
+subsequent item reuses the fused executable. `filter_jit` caches on the model's
+static structure, so a stable model object across calls compiles exactly once.
 
 ### Diagnosis
 
@@ -101,7 +100,7 @@ exactly once. (See `BiomechMammaNetEqx/src/biomech_mamma_net_eqx/model/frontend.
 - Look for any `Module.__call__` invoked inside a Python `for`/`while` over items
   (crops, frames, people, cameras, hypotheses).
 - Confirm it's hot: tie it to the wall-share. Wrapping a 0.1%-of-wall helper buys
-  nothing; wrapping the per-crop forward of a 53%-of-wall front-end is the win.
+  nothing; wrapping the per-item forward of a phase that dominates wall is the win.
 
 ### Fix
 
@@ -132,9 +131,10 @@ functions in a loop ran **~454 ms** vs **~2.7 ms** for the cached/fused form —
 - **Independent elements, same shape → `vmap` inside one jit.** Batch the element
   axis so XLA fuses across it: `eqx.filter_jit(jax.vmap(f))(xs)`. One launch, full
   occupancy. **Caveat (§6): vmapping a heavy forward over a large batch axis
-  materializes every element's activations at once and can OOM** — that is exactly
-  why cam-vmap was rejected in BiomechMammaNetEqx (ViT-H × 12 cameras OOM'd at
-  every batch size). Chunk the batch if it doesn't fit; see `jax-memory-and-retracing`.
+  materializes every element's activations at once and can OOM** — e.g. a large
+  ViT/backbone vmapped over a wide batch axis (many parallel streams/views) can
+  exceed device memory at every batch size. Chunk the batch if it doesn't fit; see
+  `jax-memory-and-retracing`.
 - **Sequential dependence (state carried step→step) → `lax.scan`.** A Python loop
   inside jit is *unrolled* into a giant graph (slow to compile, large); `lax.scan`
   compiles to one XLA `While` and **"is useful for reducing compilation times"**
@@ -216,17 +216,19 @@ where the old buffer is dead after the update. `eqx.filter_jit(donate="all")` /
 
 **Adding jit changes the numbers slightly.** XLA fuses and reorders
 floating-point ops, so a jitted forward is **not byte-identical** to the eager
-one. In the MammaNet head case: landmark coords shifted `max ~4e-4` normalized
-(~0.16 px de-normed), probabilities `max ~4.5e-3`.
+one. Typical magnitude for a deep vision forward: outputs shift by ~1e-4–1e-3 in
+their native units (e.g. sub-pixel on normalized coordinates, ~1e-3 on
+probabilities) — negligible for the task, fatal for a `==` test.
 
 Therefore:
 
 - **Do not gate a jit change on bit-equality** — it will fail for a correct
-  change. A council "it'll be bit-equal" expectation is usually wrong.
-- **Gate on the metric that matters end-to-end** — reprojection error, MPJPE, the
-  DB-row values a consumer reads — within a tolerance, not `==`.
+  change. An "it'll be bit-equal" expectation is usually wrong.
+- **Gate on the metric that matters end-to-end** — your task's accuracy/error
+  measure (e.g. a reprojection error, an MPJPE, a downstream consumer's values) —
+  within a tolerance, not `==`.
 - Flag any jit change that feeds a downstream **exact-match** assertion or a
-  byte-identical DB/cache key; loosen those to metric tolerances.
+  byte-identical stored/cache key; loosen those to metric tolerances.
 
 ## 6. How to Measure (so the win is real, not noise)
 
@@ -264,7 +266,7 @@ confounds — same hardware, warm, synchronized:
 - [ ] No per-call Python scalar crossing the jit boundary (pass `jnp.asarray`)
 - [ ] `static=True` only on real config; weights/data stay traced
 - [ ] Benchmarked warm, same-GPU, same-process, with `block_until_ready`
-- [ ] Gated on reproj/MPJPE/metric within tolerance, NOT bit-equality
+- [ ] Gated on your task metric within tolerance, NOT bit-equality
 - [ ] `JAX_LOG_COMPILES=1` shows a single compile, not per-call retraces
 
 ## Related Skills
