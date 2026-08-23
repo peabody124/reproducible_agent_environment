@@ -215,9 +215,23 @@ if global_step % save_every == 0:
     save(model_to_save, opt_to_save)
 ```
 
-Each local holds its arrays until reassigned. With a save branch, a validation branch and a
-visualisation branch, a real trainer accumulated **~25 GB per card** of replicated junk that was
-live for the entire run after each branch first executed **[F]**.
+Each local holds its arrays until reassigned, so between one save and the next the copy stays live.
+
+**Do not over-claim the magnitude — one field investigation measured it and got a much smaller
+number than it first estimated [M].** Bracketing the allocator cap on a trainer whose step wanted
+~80.7 GB of a ~135 GB pool, with save / overlay / validation all firing on the same step, the
+window in which a boundary tipped an otherwise-passing step was **under ~1.5 GB** — not the 12-25 GB
+the docstring arithmetic above suggests. The persistent cost was small; the boundary behaved as a
+brief **transient spike** on a margin that was already knife-edge (the production failure map read
+59% free against 58.4% needed). Its earlier "~25 GB/card pinned for the whole run" estimate was
+**retracted**.
+
+The lesson generalises past this bug: **the residency mechanism is real and worth fixing, but on a
+system this tight the thing that eventually kills you may be slow allocator drift over tens of
+thousands of steps rather than any single branch.** In that investigation the production memory
+fraction was GREEN in a fresh short run at the same setting the dead arms had used, and the arms
+had survived several saves and a validation before dying — so no single event explained it. Fix the
+placement because it is correct; do not promise a specific margin recovery unless you measured one.
 
 **Rules**
 - Route every unreplication through one helper that commits to a device. Never open-code `x[0]`.
