@@ -44,7 +44,7 @@ The **single source of truth** for tool configuration (ruff, pytest, coverage) i
 - `/gait-metrics` — Gait analysis: walking segments, spatiotemporal metrics, GDI
 - `/jax-config` — JAX/Equinox-compatible config setup with pytree registration and tyro CLI
 - `/jax-memory-and-retracing` — Diagnose/avoid GPU & host OOMs, memory leaks, and JIT retracing in JAX/Equinox
-- `/jax-multi-gpu` — pmap data-parallel: unreplication leaks, collective hangs, batch/schedule scaling, and whether sharding pays
+- `/jax-multi-gpu` — data-parallel on several devices (`pmap` and its `jit`+`shard_map` successor): unreplication/placement leaks, collective hangs and the flags that end them, batch/schedule scaling, and whether sharding pays
 - `/camera-model` — Camera projections, intrinsics/extrinsics, triangulation, mm/m unit conventions
 - `/efficient-rendering` — Fast, correct rendering of meshes/point clouds/overlays: EGL headless GPU, OpenCV↔GL conventions, distortion strategies, chunked JAX rasterizers, video compositing
 - `/gait-lab-dataset` — Clinical gait lab schema, video-mocap sync, MMC-GaitLab trial matching

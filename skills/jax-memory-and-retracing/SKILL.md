@@ -13,8 +13,10 @@ description: >
 
 # JAX Memory & Retracing: Diagnose and Avoid OOMs, Leaks, and Recompiles
 
-> Multi-device (`pmap`) runs add their own OOM and hang modes — unreplication
-> residency, collective deadlocks, and schedule scaling. See `jax-multi-gpu`.
+> Multi-device runs add their own OOM and hang modes — unreplication residency (an
+> "unreplicated" tree that is still resident on every device), collective deadlocks, and
+> schedule scaling. If the OOM lands at a checkpoint, validation or rendering boundary, or
+> the process is alive but doing no work, start at `jax-multi-gpu`.
 
 ## Overview
 
