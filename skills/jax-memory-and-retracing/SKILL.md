@@ -13,6 +13,9 @@ description: >
 
 # JAX Memory & Retracing: Diagnose and Avoid OOMs, Leaks, and Recompiles
 
+> Multi-device (`pmap`) runs add their own OOM and hang modes — unreplication
+> residency, collective deadlocks, and schedule scaling. See `jax-multi-gpu`.
+
 ## Overview
 
 Three failure families account for most "mysterious" crashes in long-running
