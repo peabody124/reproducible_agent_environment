@@ -115,6 +115,66 @@ order = jnp.argsort(-scores)[:N_MAX]
 return masks[order], scores[order] >= threshold
 ```
 
+## 1b. The Inverse: a Cached Trace Silently Absorbing a Change
+
+Section 1 is about retracing too *often*. The same cache key causes the opposite
+failure, and it is far harder to see: **jit does not retrace when you needed it
+to**, so a change you made has no effect and the code appears to confirm it.
+
+### How it happens
+
+The cache is keyed on the static parts of the call — shapes, dtypes, pytree
+structure, non-array Python values. It is **not** keyed on module-level
+constants, config values, or any other global the traced code *read*. Change one
+of those and call the function again with the same argument structure, and you
+get the previous executable back.
+
+```python
+# WRONG -- the mutation is absorbed by the cache; the assertion tests nothing.
+config.EPS = 1e-5                     # was 1e-6
+out = model(x)                        # same shapes -> cached trace, old EPS
+assert allclose(out, golden)          # PASSES. Nothing was mutated in the executable.
+```
+
+### Where it bites hardest: mutation tests
+
+A mutation test exists to prove a guard has teeth: break the thing it guards,
+watch it fail. If the mutation is absorbed by a trace, the test passes and is
+recorded as *proven* when it is inert — the worst outcome, because a test nobody
+distrusts is worse than no test.
+
+### Fix
+
+Force a re-trace, then confirm the mutation is observable before trusting any
+arm that passes:
+
+```python
+# Reach the undecorated body, so no cache is consulted at all.
+type(model).__call__.__wrapped__(model, x)
+
+# Or clear the caches between arms.
+jax.clear_caches()
+
+# Or build a fresh module/closure per arm, so the cache key differs.
+```
+
+```python
+# And prove the harness can see a mutation at all -- run one arm you KNOW must
+# fail, and watch it fail, before crediting an arm that passes.
+```
+
+### The same cache defeats memory measurement
+
+A module baked into a closure is a compile-time constant; the same module passed
+as a traced argument is not. The two produce different executables and different
+peak-memory figures for the same computation. **Measure in the calling convention
+you ship**, or the number describes a program you do not run.
+
+Relatedly, `jax.device_get`-style peak counters (`peak_bytes_in_use`, and torch's
+`max_memory_allocated`) are **process-lifetime high-water marks**. Several arms in
+one process all report the maximum over every arm run so far, which silently
+yields an identical figure for arms that differ. One arm, one process.
+
 ## 2. Detecting Retraces (Equinox/JAX tooling)
 
 ### `JAX_LOG_COMPILES=1` — locate and count compilations

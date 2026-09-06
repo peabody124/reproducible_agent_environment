@@ -176,6 +176,60 @@ to regenerate it. Silent vendoring is the anti-pattern, not vendoring per se.
 - A standalone `generate_golden.py` that must be run by hand and is easy to forget —
   fold generation into the `conftest.py` load-or-generate fixture instead.
 
+## Guards that cannot fail
+
+A parity suite is only worth its gates. Four shapes recur, and each produces a
+test that passes for the wrong reason — worse than no test, because nobody
+distrusts a green one. Prove every guard by MUTATION: break what it guards,
+watch it fail, revert.
+
+- **Asserting a value against the constant it was derived from.**
+  `assert jax.config.jax_default_matmul_precision == config.MATMUL_PRECISION`
+  is an identity when the fixture set the flag *from* that constant — it holds
+  for every value, including the wrong one. Pin the required VALUE to a literal
+  in the test, and assert the constant against it, so the constant is what is
+  guarded rather than its plumbing.
+- **A guard conditioned on the work being incomplete.** `assert unfinished_stages()`,
+  `assert len(STUBS) > 0`, "this hazard is still unwritable" — each goes inert or
+  red the moment the port finishes, i.e. exactly when it starts mattering. Make the
+  precondition the check's REACH, not the work remaining.
+- **A set defined by subtraction, then asserted to partition.** If
+  `captured = all_keys - uncaptured`, then `captured | uncaptured == all_keys` is
+  true by construction and cannot fail.
+- **A test whose subject never enters the assertion** — e.g. a "the port does not
+  sort" test that inspects only the reference array.
+
+See also the jit-cache hazard in `jax-memory-and-retracing`: a mutation absorbed
+by a cached trace makes any of the above look proven.
+
+## Provenance: what a stamp must cover
+
+- **Hash the GENERATOR SOURCE into the golden**, not just the inputs, and re-check
+  it on load. A golden whose recipe is unknown cannot be reproduced later. Never
+  backfill a stamp after the fact — that converts an honest gap into a false claim.
+- **Every file the generator READS is a recipe source**, including the config module
+  it pulls constants from. A config edit that changes what a golden MEANS while its
+  stamp still reads "current" is undetectable.
+- **A stale or missing stamp should FAIL LOUDLY**, not silently regenerate mid-suite:
+  an unattended rebuild voids every gate measured from the old numbers, and on a
+  shared GPU it is an unannounced multi-GB job.
+- **Pin the capture DEVICE explicitly.** `"cuda" if available else "cpu"` is ambient:
+  one capture in a shell without a visible card lands on CPU, and a CPU and a CUDA
+  capture differ exactly in reduction order — so one wrong-device golden makes its
+  siblings' floors describe a different computation.
+- **Commit the generator before trusting its output.** A generator fix left
+  uncommitted while goldens are built against it leaves HEAD rejecting every golden.
+
+## Measure the floor on every backend the suite runs on
+
+A tolerance derived on one backend is a tolerance for that backend. Measured on one
+port: the CPU arm of the same comparison was **3.5x wider** than the GPU arms, so a
+GPU-only floor is too tight for a CPU run of the same suite. The same holds across
+input scales — an arithmetic floor that grows with sequence length makes a constant
+measured at one size a gate for that size only. Derive from an envelope over the
+configurations the suite actually runs, and have the suite report which backend
+produced its numbers.
+
 ## Related skills
 
 - `/scaffold-repo` — creates the `tests/` layout and `.gitignore` (ensure `tests/golden/`).
