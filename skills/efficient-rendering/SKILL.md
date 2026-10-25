@@ -90,6 +90,11 @@ os.environ["EGL_DEVICE_ID"] = str(chosen_egl_index)  # only after probing/verify
 If you must honor a pre-set `EGL_DEVICE_ID`, still validate it resolves to real
 hardware (the `GL_RENDERER` assert below) rather than trusting the number.
 
+**NVIDIA Devcontainer Setup (`nvidia/cuda:*-ubuntu24.04` gotchas):**
+1. **`NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics`**: `nvidia/cuda` base images default to `compute,utility`. Unless `"-e", "NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics"` is in `devcontainer.json` `runArgs` (and `containerEnv`), `nvidia-container-cli` only mounts CUDA compute libraries and omits `libEGL_nvidia.so.0`, `libGLX_nvidia.so.0`, and `libnvidia-rtcore.so`.
+2. **Missing `10_nvidia.json` and `nvidia_icd.json`**: `nvidia/cuda` Ubuntu 24.04 images do not include GLVND or Vulkan JSON manifests, and `apt-get install libgl1 libegl1 libvulkan1` only registers Mesa (`50_mesa.json` and `lvp_icd.json`). Ensure `/usr/share/glvnd/egl_vendor.d/10_nvidia.json` (`"library_path": "libEGL_nvidia.so.0"`) and `/etc/vulkan/icd.d/nvidia_icd.json` (`"library_path": "libGLX_nvidia.so.0"`) exist (created in `templates/devcontainer-gpu/devcontainer.json` `onCreateCommand`), or set `__EGL_VENDOR_LIBRARY_FILENAMES` / `VK_ICD_FILENAMES` at runtime.
+3. **Manual `--device=/dev/nvidia*` filtering and Vulkan/RTX**: If `devcontainer.json` `runArgs` manually lists `--device=/dev/nvidia0`, `--device=/dev/nvidiactl`, `--device=/dev/nvidia-uvm` (e.g. to skip unhealthy GPUs), you **must also include `--device=/dev/nvidia-modeset` and `--device=/dev/dri`**. Without them, CUDA and EGL pbuffers work, but Vulkan (`vkCreateDevice`, Isaac Sim `omni.rtx`, SAPIEN, ManiSkill) segfaults or fails with `No device could be created`.
+
 **Always verify you got the GPU, not the CPU fallback.** Do this once at startup
 and fail loudly:
 

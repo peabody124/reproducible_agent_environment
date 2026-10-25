@@ -42,6 +42,7 @@ feed them.
 | GPU memory grows step over step inside a "fixed-size" loop | Retained compiled executables from retraces, or an unbounded feature cache | 1, 2 |
 | Process disappears mid-run, log ends abruptly, **no Python traceback** | Host OOM-killer (SIGKILL) — usually unbounded host-side accumulation | 4 |
 | `XlaRuntimeError: RESOURCE_EXHAUSTED` | GPU OOM — JAX raised it; catchable and diagnosable | 5 |
+| OOM at `jit_step`/first backward; worsens with more views/loss terms; **still OOMs on a 2x-bigger card** | Un-checkpointed backward tape through a large sub-forward (perceptual/teacher/discriminator) in the loss | 5 |
 | OOM during model *loading*, error blames a checkpoint leaf / tree mismatch | Device allocator died mid-deserialize; wrapped as a structure error | 5 |
 | Worked yesterday; today jit'd fns fail with version-mismatch / deserialize errors | Stale persistent compilation cache after a cuDNN/driver/jaxlib change | 3 |
 | `libcudnn` load errors or cudnn-graph build failures after adding a dependency | Two cuDNN wheels (cu12 vs cu13) colliding, or cuDNN below what jaxlib needs | 6 |
@@ -394,6 +395,63 @@ the caller omits it), `n_chunks == 1` and `lax.map` runs a single group over all
 Default `chunk` to a small constant (2–4), and treat `chunk >= N` as the
 unguarded wide-`vmap` case in the docstring so callers know it OOMs large models.
 
+### Backward-tape OOM: gradient-checkpoint large frozen sub-forwards used in a loss
+
+A loss term that forwards a **large network on the prediction** — a perceptual /
+feature loss (VGG / DINO / CLIP), a frozen teacher, a discriminator — is
+differentiable wrt that prediction, so reverse-mode AD must **store the
+sub-network's entire activation tape** for the backward pass. The weights being
+**frozen does not help**: freezing zeroes the *weight* gradient, but the
+*input*-gradient path still needs every intermediate activation. Run the
+sub-forward `K` times per step (once per view, timestep, MC sample, or loss
+target) and the **backward-tape peak scales with `K x depth x tokens`**, dwarfing
+the rest of the step.
+
+**The tell that distinguishes this from a working-set OOM:** the failure strikes
+at `jit_step` (the first backward), worsens as you add loss terms or views, and
+**does not fit even on a much larger card** — a 2x GPU OOMs the same way, because
+the cost is the *tape*, not a one-off buffer. (A working-set OOM, by contrast,
+shrinks with batch/resolution and *does* fit when you upsize the card.) If a
+perceptual/feature loss makes a run need >2x its base memory, suspect this before
+reaching for a bigger GPU.
+
+Fixes, in order:
+1. **`jax.checkpoint` (remat) the sub-forward.** Wrap the frozen network's forward
+   so its activations are **recomputed in the backward** instead of stored —
+   trading compute for memory. Peak drops from `K x full-tape` to roughly
+   `K x one-layer`. Value-identical; the single highest-leverage fix.
+2. **`stop_gradient` the target branch.** In `d(f(pred), f(gt))`, `f(gt)` needs no
+   tape — wrap it so only the `pred` branch is differentiated.
+3. **Cut `K`.** Score the term on fewer views/samples; a perceptual loss on the
+   single matched view is usually as effective as on all of them at a fraction of
+   the memory.
+
+```python
+# WRONG — frozen backbone forward on every view; full tape per view -> peak ∝ K.
+def feat_loss(pred, gt, mask):
+    return jnp.mean(1 - cos(backbone(pred * mask), backbone(gt * mask)))
+total = sum(feat_loss(pred[v], gt[v], mask[v]) for v in range(K))   # OOMs at jit_step
+
+# RIGHT — remat the differentiated forward, stop-grad the target, score one view.
+backbone_remat = jax.checkpoint(backbone)
+def feat_loss(pred, gt, mask):
+    f_gt = jax.lax.stop_gradient(backbone(gt * mask))               # no tape
+    return jnp.mean(1 - cos(backbone_remat(pred * mask), f_gt))     # recomputed in bwd
+total = feat_loss(pred[0], gt[0], mask[0])                          # K = 1
+```
+
+This is the backward-pass dual of the forward-peak fan-out above: §"Reduce-after-fan-out"
+chunks the *forward* activations of `N` parallel variants; remat recomputes the
+*backward* activations of a deep sub-forward. A loss with both (a perceptual term
+under a vmap over views) needs both fixes.
+
+### Standardized Cross-Project Toolchain & XLA Flags (`body_models.environment_check`)
+
+Rather than scattering ad-hoc `os.environ["XLA_FLAGS"]` blocks across training scripts, projects in the biomechanics ecosystem share a single, pure-metadata environment checker and configurator in `body_models.environment_check`:
+
+- **Before JAX backend initialization (top of entrypoints / `conftest.py`):** Call `configure_environment()` (or `apply_recommended_flags()`) to idempotently set `XLA_PYTHON_CLIENT_PREALLOCATE=false`, append version-specific XLA workaround flags (such as `--xla_gpu_experimental_gemm_fusion_v2=false` on `jaxlib >= 0.12` to prevent the Triton GEMM nested-`vmap` backward miscompile `openxla/xla#51186`), and configure partitioner workarounds (`JAX_USE_SHARDY_PARTITIONER=false` on `jaxlib == 0.11.2`).
+- **Passive runtime verification (`check_environment()` / `find_gotchas()`):** Automatically invoked once per process when `ForwardKinematics` is constructed (and callable directly by any library). Reads `importlib.metadata` and `os.environ` without importing `jax` or touching devices, emitting a `ToolchainWarning` if any known JAX / XLA / cuDNN / NCCL gotcha is active and unmitigated.
+
 ### Allocator hygiene
 
 ```bash
@@ -471,6 +529,9 @@ each boundary — never a global config flip made on import.
 - [ ] `XLA_PYTHON_CLIENT_PREALLOCATE=false` + mem fraction with headroom
 - [ ] Persistent compile cache opt-in only; wiped after CUDA/cuDNN changes
 - [ ] x64 off globally; bf16 only on validated NN forwards, never on fits
+- [ ] Large frozen sub-forwards in a loss (perceptual / teacher / discriminator)
+      wrapped in `jax.checkpoint`; target branch `stop_gradient`'d; scored on the
+      fewest views/samples that suffice
 
 ## Related Skills
 

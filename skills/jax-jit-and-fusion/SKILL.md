@@ -167,6 +167,11 @@ one jit wrapping preprocess-compute-postprocess, with only true I/O / host contr
   Speed and memory pull opposite ways here. Don't keep widening blindly; chunk the
   axis (`lax.map` over chunks) so peak ∝ chunk, not ∝ batch. Cross-reference
   `jax-memory-and-retracing` §"Reduce-after-fan-out".
+- **Block differentiates a deep sub-forward** — if the pure block trains through a
+  large frozen network (perceptual / teacher / discriminator loss), the backward
+  stores that network's full activation tape and the block can OOM at `jit_step`
+  even on a 2x card. `jax.checkpoint` (remat) the sub-forward to recompute it in
+  backward. See `jax-memory-and-retracing` §"Backward-tape OOM".
 - **Value-dependent control flow** can't go inside jit directly — restructure with
   `jnp.where`/`lax.cond`, or keep that branch outside and jit the two pure arms.
 

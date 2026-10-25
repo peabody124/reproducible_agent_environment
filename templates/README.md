@@ -36,14 +36,22 @@ mkdir -p ~/.claude  # On host machine
 
 **Features:**
 - Base image: `nvidia/cuda:12.6.0-cudnn-devel-ubuntu24.04`
-- GPU access via `--gpus all`
-- OpenCV / headless rendering dependencies (`libgl1`, `libegl1`, `libglib2.0-0`)
+- GPU access via `--gpus all` with `-e NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics`
+- OpenCV, EGL, and Vulkan rendering dependencies (`libgl1`, `libegl1`, `libvulkan1`, `libglib2.0-0`, `libosmesa6-dev`) plus NVIDIA GLVND (`10_nvidia.json`) and Vulkan (`nvidia_icd.json`) ICD manifests
 - Git LFS for large model files
 - Jupyter notebook support
 - Project auto-install: `pip install -e '.[dev]'`
 - Claude Code auto-install via `postCreateCommand`
 
-If a project renders with PyOpenGL in headless mode (`PYOPENGL_PLATFORM=egl`), keep `libegl1` in the devcontainer so `libEGL.so.1` is available. The system library is only half of it — set `PYOPENGL_PLATFORM=egl` before any GL import, probe for a real GPU, and assert you didn't land on the `llvmpipe` CPU fallback. See the **`/efficient-rendering`** skill for the full runtime setup and rendering/camera patterns.
+### Headless GPU Rendering (EGL, OpenGL & Vulkan / Isaac Sim / MuJoCo / pyrender)
+
+Because `nvidia/cuda` base images set `NVIDIA_DRIVER_CAPABILITIES=compute,utility` by default and do not ship GLVND/Vulkan JSON manifests, three things are required in `devcontainer.json` for hardware rendering:
+
+1. **Enable `graphics` driver capabilities at container creation:** Pass `"-e", "NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics"` in `runArgs` (and in `containerEnv`) so `nvidia-container-cli` mounts `libEGL_nvidia.so.0`, `libGLX_nvidia.so.0`, `libnvidia-rtcore.so`, and `libnvidia-glvkspirv.so`.
+2. **Register NVIDIA EGL & Vulkan ICD manifests in `onCreateCommand`:** Installing `libgl1 libegl1 libvulkan1` on Ubuntu 24.04 only writes `/usr/share/glvnd/egl_vendor.d/50_mesa.json` and `/usr/share/vulkan/icd.d/lvp_icd.json`. Without `/usr/share/glvnd/egl_vendor.d/10_nvidia.json` (`libEGL_nvidia.so.0`) and `/etc/vulkan/icd.d/nvidia_icd.json` (`libGLX_nvidia.so.0`), EGL fails with `EGL_NOT_INITIALIZED` or silently falls back to CPU `llvmpipe` (10–50× slower), and Vulkan cannot find the NVIDIA driver. Both manifests are automatically written by the GPU template's `onCreateCommand`.
+3. **Include `/dev/nvidia-modeset` and `/dev/dri` when manually filtering GPU devices:** If a host has unhealthy GPUs and you manually pass `--device=/dev/nvidia0`, `--device=/dev/nvidiactl`, `--device=/dev/nvidia-uvm` in `runArgs`, you **must also include `--device=/dev/nvidia-modeset` and `--device=/dev/dri`**. Without them, CUDA and EGL pbuffers still work, but Vulkan/RTX renderers (Isaac Sim `omni.rtx`, SAPIEN, ManiSkill, `vkCreateDevice`) fail or segfault on device creation.
+
+See the **`/efficient-rendering`** skill for runtime GPU probing, `llvmpipe` assertions, context reuse, and camera conventions.
 
 **Setup:**
 ```bash

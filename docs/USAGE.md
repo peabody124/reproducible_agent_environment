@@ -81,3 +81,28 @@ If your `onCreateCommand` includes `git lfs install` and the repo has beads git 
 ```
 
 `--force` overwrites conflicting hooks, and `|| true` ensures the build continues even if git-lfs setup fails for other reasons.
+
+### Headless GPU rendering (EGL & Vulkan) in NVIDIA devcontainers
+
+`nvidia/cuda:*-ubuntu24.04` images default to `NVIDIA_DRIVER_CAPABILITIES=compute,utility` and do not ship GLVND or Vulkan ICD JSON manifests. Installing `libgl1 libegl1 libvulkan1` via `apt` only installs Mesa's `50_mesa.json` and `lvp_icd.json`, causing PyOpenGL/pyrender/MuJoCo to fail with `EGL_NOT_INITIALIZED` or fall back to CPU `llvmpipe`, and causing Vulkan renderers (Isaac Sim, SAPIEN, ManiSkill) to miss the NVIDIA GPU.
+
+**Fix:** Ensure your `.devcontainer/devcontainer.json` includes:
+
+1. **`graphics` driver capability in `runArgs` and `containerEnv`:**
+   ```jsonc
+   "runArgs": [
+     "--env-file", ".env",
+     "--gpus", "all",
+     "-e", "NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics"
+   ],
+   "containerEnv": {
+     "NVIDIA_DRIVER_CAPABILITIES": "compute,utility,graphics",
+     "PYOPENGL_PLATFORM": "egl",
+     "MUJOCO_GL": "egl"
+   }
+   ```
+2. **NVIDIA EGL & Vulkan ICD manifests in `onCreateCommand`:**
+   ```jsonc
+   "onCreateCommand": "sudo apt-get update && sudo apt-get install -y libgl1 libegl1 libvulkan1 libglib2.0-0 libosmesa6-dev git-lfs && sudo mkdir -p /usr/share/glvnd/egl_vendor.d /etc/vulkan/icd.d && printf '{\"file_format_version\":\"1.0.0\",\"ICD\":{\"library_path\":\"libEGL_nvidia.so.0\"}}\\n' | sudo tee /usr/share/glvnd/egl_vendor.d/10_nvidia.json >/dev/null && printf '{\"file_format_version\":\"1.0.0\",\"ICD\":{\"library_path\":\"libGLX_nvidia.so.0\",\"api_version\":\"1.3\"}}\\n' | sudo tee /etc/vulkan/icd.d/nvidia_icd.json >/dev/null && sudo rm -rf /var/lib/apt/lists/* && (git lfs install --force || true)"
+   ```
+3. **DRM & modeset devices when manually filtering GPUs:** If you pass explicit `--device=/dev/nvidia0` flags in `runArgs` (e.g., to isolate healthy GPUs on a multi-GPU server), you **must also include `--device=/dev/nvidia-modeset` and `--device=/dev/dri`**, or Vulkan `vkCreateDevice` / Isaac Sim `omni.rtx` will segfault or fail with `No device could be created`.

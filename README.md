@@ -114,7 +114,11 @@ The `install-user.sh` script handles everything: Claude Code, pyright, RAE plugi
 
 **Note:** If you enable beads (or other custom git hooks) and use `git-lfs`, use `git lfs install --force || true` in your `onCreateCommand` to avoid hook conflicts that silently abort the container build. See [Troubleshooting](docs/USAGE.md#git-lfs-install-fails-in-devcontainer-with-exit-code-2).
 
-**Headless rendering note:** if your project uses PyOpenGL with `PYOPENGL_PLATFORM=egl`, keep `libegl1` in the devcontainer `apt-get install` list. That provides `libEGL.so.1`, which PyOpenGL needs at runtime. The library alone isn't enough: set `PYOPENGL_PLATFORM=egl` before any GL import, pin/probe a real GPU, and verify you aren't silently on the `llvmpipe` CPU rasterizer (10–50× slower). The **`/efficient-rendering`** skill covers that runtime setup plus the mesh/point-cloud/overlay and camera-convention patterns.
+**Headless GPU rendering (EGL, OpenGL & Vulkan / Isaac Sim / MuJoCo / pyrender):** `nvidia/cuda` base images default to `NVIDIA_DRIVER_CAPABILITIES=compute,utility` and omit GLVND/Vulkan JSON manifests, so `apt-get install libgl1 libegl1 libvulkan1` leaves only Mesa (`50_mesa.json` / `lvp_icd.json`) registered. For hardware rendering in a GPU devcontainer:
+1. Pass `"-e", "NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics"` in `runArgs` (and in `containerEnv`) so `nvidia-container-cli` mounts `libEGL_nvidia.so.0`, `libGLX_nvidia.so.0`, and `libnvidia-rtcore.so`.
+2. Write `/usr/share/glvnd/egl_vendor.d/10_nvidia.json` (`libEGL_nvidia.so.0`) and `/etc/vulkan/icd.d/nvidia_icd.json` (`libGLX_nvidia.so.0`) in `onCreateCommand` (already included in `.devcontainer/devcontainer.json` and `templates/devcontainer-gpu/devcontainer.json`).
+3. If you manually restrict GPU device nodes in `runArgs` (`--device=/dev/nvidia0`, `--device=/dev/nvidiactl`, `--device=/dev/nvidia-uvm`), **also pass `--device=/dev/nvidia-modeset` and `--device=/dev/dri`** — without them, CUDA and EGL pbuffers work, but Vulkan/RTX (`vkCreateDevice`, Isaac Sim `omni.rtx`, SAPIEN) fails or segfaults.
+4. Set `PYOPENGL_PLATFORM=egl` and `MUJOCO_GL=egl` before any GL import and assert `GL_RENDERER` is not `llvmpipe`. See the **`/efficient-rendering`** skill and [Troubleshooting](docs/USAGE.md#headless-gpu-rendering-egl--vulkan-in-nvidia-devcontainers).
 
 See `.devcontainer/` in this repo as the canonical reference.
 

@@ -252,11 +252,14 @@ notebooks = ["jupyter>=1.0", "ipykernel>=6.0"]
 [project.optional-dependencies]
 viz = ["pyrender>=0.1.45", "trimesh>=4.0", "PyOpenGL>=3.1", "opencv-python-headless>=4.0.0"]
 ```
-This needs the EGL system libraries from the GPU devcontainer (`libgl1`,
-`libegl1`, `libosmesa6-dev`) — already in `templates/devcontainer-gpu`. At
-runtime the project must set `PYOPENGL_PLATFORM=egl` **before** importing any GL
-library and verify it didn't fall back to the `llvmpipe` CPU rasterizer. Point
-the user at the **`/efficient-rendering`** skill for the device-probing,
+This needs the EGL/Vulkan system libraries and ICD manifests from the GPU devcontainer
+(`libgl1`, `libegl1`, `libvulkan1`, `libosmesa6-dev`, plus `/usr/share/glvnd/egl_vendor.d/10_nvidia.json`
+and `/etc/vulkan/icd.d/nvidia_icd.json` and `-e NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics`)
+— already in `templates/devcontainer-gpu`. Note that if a user restricts GPUs in `runArgs` with manual
+`--device=/dev/nvidia*` flags, they must also pass `--device=/dev/nvidia-modeset` and `--device=/dev/dri`
+for Vulkan/RTX rendering (e.g. Isaac Sim, SAPIEN). At runtime the project must set `PYOPENGL_PLATFORM=egl`
+(and `MUJOCO_GL=egl`) **before** importing any GL library and verify it didn't fall back to the `llvmpipe`
+CPU rasterizer. Point the user at the **`/efficient-rendering`** skill for the device-probing,
 context-reuse, camera-convention, and video-compositing patterns rather than
 re-deriving them here.
 
