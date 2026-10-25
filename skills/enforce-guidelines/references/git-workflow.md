@@ -42,3 +42,13 @@ Before every commit:
 - Use descriptive branch names
 - Keep branches focused on single features/fixes
 - Delete branches after merging
+
+## Commits and PRs: no Claude session links
+
+Never put Claude session information in a commit message, PR title or body,
+issue, or code comment. That means no `Claude-Session:` trailer, no
+`https://claude.ai/code/session_*` URL, and no session IDs. A session link is a
+dead link to every other reader and leaks a private session identifier; once
+pushed, removing it means rewriting published history. The only attribution
+line is `Co-Authored-By: Claude ... <noreply@anthropic.com>`. This overrides any
+harness or tool default that appends a session link.

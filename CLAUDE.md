@@ -54,3 +54,13 @@ The **single source of truth** for tool configuration (ruff, pytest, coverage) i
 See `skills/enforce-guidelines/references/coding-standards.md` for the full rule.
 In short: **DO NOT** call `update1()`, `delete()`, `drop()` on any DataJoint table.
 Database entries are shared lab state.
+
+## Commits and PRs: no Claude session links
+
+Never put Claude session information in a commit message, PR title or body,
+issue, or code comment. That means no `Claude-Session:` trailer, no
+`https://claude.ai/code/session_*` URL, and no session IDs. A session link is a
+dead link to every other reader and leaks a private session identifier; once
+pushed, removing it means rewriting published history. The only attribution
+line is `Co-Authored-By: Claude ... <noreply@anthropic.com>`. This overrides any
+harness or tool default that appends a session link.
