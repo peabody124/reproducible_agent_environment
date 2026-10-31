@@ -129,7 +129,7 @@ docs/papers/<paper_slug>/
 ├── methods.md                   # Best unified method first, with <!-- CODE: file:line --> anchors
 ├── results.md                   # Primary benchmark -> physical/clinical validation -> ablations that mattered
 ├── discussion.md                # Synthesis + forthcoming "Limitations and Future Directions" subsection
-├── acknowledgments.md           # Funding and cohort acknowledgments
+├── acknowledgments.md           # Funding, cohort, and mandatory AI usage acknowledgment
 ├── appendix.md                  # Exhaustive per-bone/per-joint tables, derivations, sensitivity grids
 ├── references.bib               # Populated via local Zotero API (http://localhost:23119/api)
 ├── BUILD.md                     # Git commit provenance table + exact reproduction commands
@@ -151,6 +151,9 @@ docs/papers/<paper_slug>/
    - `myst build --tex` writes a culled `main.bib`. Both `build_isr.sh` and `build_ieee.sh` automatically overwrite `main.bib` with `references.bib` and copy `templates/isr/{isrpaper.cls,isr-logo.pdf}` into the working directory before running `xelatex` + `biber` + `xelatex` $\times 2$, then grep the `.log` to hard-fail on any undefined citation (`?`).
 3. **Code-to-Paper Provenance Anchors (`<!-- CODE: path:Lstart-Lend -->`) & `BUILD.md`:**
    - Every architectural claim, loss term, and evaluation metric in `methods.md` and `results.md` should carry an HTML comment anchoring it to the exact source file and line range (`<!-- CODE: src/pkg/model.py:L120-L155 -->`), and `BUILD.md` must record the git commit SHA and exact CLI invocations that produced every table and figure.
+4. **Mandatory AI Usage Acknowledgment (`acknowledgments.md`):**
+   - Every ISR manuscript must include `acknowledgments.md` in `manuscript.md` with the standard AI-assistance disclosure (included by default in `templates/myst-paper/acknowledgments.md`):
+     > *"AI-assisted coding and research agents, including Claude (Anthropic) and Google Antigravity, were used for code development, running experiments, and assistance with manuscript preparation. The manuscript was extensively reviewed and verified by the authors, who take full responsibility for its content."*
 
 ---
 
