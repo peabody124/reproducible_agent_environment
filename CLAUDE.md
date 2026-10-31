@@ -48,6 +48,7 @@ The **single source of truth** for tool configuration (ruff, pytest, coverage) i
 - `/camera-model` — Camera projections, intrinsics/extrinsics, triangulation, mm/m unit conventions
 - `/efficient-rendering` — Fast, correct rendering of meshes/point clouds/overlays: EGL headless GPU, OpenCV↔GL conventions, distortion strategies, chunked JAX rasterizers, video compositing
 - `/gait-lab-dataset` — Clinical gait lab schema, video-mocap sync, MMC-GaitLab trial matching
+- `/isr-paper-writing` — Guide, scaffold, edit, and critique scientific manuscripts in R. James Cotton's authentic pre-2026 (non-AI-written) voice using `templates/myst-paper` (dual ISR preprint + IEEE builds, Three-Subagent Review Triad, and Experimental Occam's Razor loop)
 
 ## CRITICAL: NEVER Modify Database Entries
 

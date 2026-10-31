@@ -1,0 +1,81 @@
+jtex: v1
+title: ISR Lab Paper Template
+description: MyST template for Intelligence Sensing and Rehabilitation Laboratory papers
+version: 1.0.0
+license: MIT
+authors:
+  - name: R. James Cotton
+    github: peabody124
+    affiliations:
+      - Northwestern University
+      - Shirley Ryan AbilityLab
+tags:
+  - paper
+  - preprint
+  - technical-report
+source: https://github.com/peabody124/biomechagent
+parts:
+  - id: abstract
+    required: true
+    description: Abstract text for the paper
+  - id: acknowledgments
+    description: Acknowledgments section
+  - id: appendix
+    description: Appendix content
+options:
+  - id: color_scheme
+    type: choice
+    description: Color scheme for the paper
+    default: orange
+    choices:
+      - orange
+      - blue
+  - id: columns
+    type: choice
+    description: Number of columns for the document
+    default: one
+    choices:
+      - one
+      - two
+  - id: paper_date
+    type: string
+    description: Publication or version date
+  - id: correspondence
+    type: string
+    description: Contact email(s)
+  - id: dataset_name
+    type: string
+    description: Dataset name
+  - id: dataset_url
+    type: string
+    description: Dataset URL
+  - id: project_name
+    type: string
+    description: Project/code name
+  - id: project_url
+    type: string
+    description: Project/code URL
+  - id: paper_note
+    type: string
+    description: Additional notes about the paper
+doc:
+  - id: title
+    required: true
+  - id: authors
+    required: true
+  - id: keywords
+  - id: bibliography
+files:
+  - template.tex
+  - isrpaper.cls
+  - isr-logo.pdf
+style:
+  bibliography: biblatex
+packages:
+  - amsmath
+  - amsfonts
+  - amssymb
+  - booktabs
+  - graphicx
+  - hyperref
+  - biblatex

@@ -1,0 +1,143 @@
+% ISR Lab Paper Template for MyST
+% Intelligence Sensing and Rehabilitation Laboratory
+% Northwestern University & Shirley Ryan AbilityLab
+
+\documentclass[
+[#- if options.color_scheme == "blue" #]blue[# else #]orange[# endif -#]
+[#- if options.columns == "two" #],twocolumn[# endif -#]
+]{isrpaper}
+
+% --------------------------------------------------------------------------
+% Additional packages
+% --------------------------------------------------------------------------
+[-IMPORTS-]
+
+% Font setup - Times-like fonts
+\RequirePackage{newtxtext,newtxmath}
+
+% Fix for XeLaTeX if needed
+\usepackage{fontspec}
+
+% ORCID support
+\usepackage{orcidlink}
+
+% Bibliography setup
+\usepackage[
+    backend=biber,
+    style=authoryear,
+    natbib=true,
+    doi=false,
+    url=false,
+    isbn=false,
+    maxbibnames=99,
+    maxcitenames=2,
+    uniquelist=false,
+]{biblatex}
+
+[# if doc.bibliography #]
+\addbibresource{[- doc.bibliography | join(", ") -]}
+[# endif #]
+
+\renewcommand*{\bibfont}{\footnotesize}
+\setlength{\biblabelsep}{\labelsep}
+
+\AtEveryBibitem{%
+   \clearfield{Title}%
+   \clearfield{eprint}%
+   \clearfield{note}%
+}
+
+% MyST compatibility: citet/citep to textcite/parencite
+\renewcommand{\citet}[1]{\textcite{#1}}
+\renewcommand{\citep}[1]{\parencite{#1}}
+
+% --------------------------------------------------------------------------
+% Paper metadata
+% --------------------------------------------------------------------------
+\title{[-doc.title-]}
+
+[# if doc.authors #]
+\author{
+[# for author in doc.authors #]
+[--author.name-][#- if author.orcid #]\,\orcidlink{[- author.orcid -]}\,[# endif -#]$^{
+[#- for affiliation in author.affiliations -#]
+[--affiliation.index-][#- if not loop.last #],[# endif -#]
+[#- endfor -#]
+}$[#- if not loop.last #], [# endif -#]
+[# endfor #]
+}
+[# endif #]
+
+[# if doc.affiliations #]
+\affiliations{
+[# for affiliation in doc.affiliations #]
+$^{[--affiliation.index--]}$[-- affiliation.value.name --][#- if not loop.last #] \quad [# endif -#]
+[# endfor #]
+}
+[# endif #]
+
+[# if options.paper_date #]
+\paperdate{[- options.paper_date -]}
+[# endif #]
+
+[# if options.correspondence #]
+\correspondence{[- options.correspondence -]}
+[# endif #]
+
+[# if options.dataset_name and options.dataset_url #]
+\dataset{[- options.dataset_name -]}{[- options.dataset_url -]}
+[# endif #]
+
+[# if options.project_name and options.project_url #]
+\project{[- options.project_name -]}{[- options.project_url -]}
+[# endif #]
+
+[# if options.paper_note #]
+\papernote{[- options.paper_note -]}
+[# endif #]
+
+[# if parts.abstract #]
+\paperabstract{[-parts.abstract-]}
+[# endif #]
+
+% --------------------------------------------------------------------------
+% Document
+% --------------------------------------------------------------------------
+\begin{document}
+
+\maketitle
+
+% --------------------------------------------------------------------------
+% Main content
+% --------------------------------------------------------------------------
+[-CONTENT-]
+
+% --------------------------------------------------------------------------
+% Appendix
+% --------------------------------------------------------------------------
+[# if parts.appendix #]
+\clearpage
+\section*{Appendix}
+[-parts.appendix-]
+[# endif #]
+
+% --------------------------------------------------------------------------
+% Acknowledgments
+% --------------------------------------------------------------------------
+[# if parts.acknowledgments #]
+\section*{Acknowledgments}
+\small
+[- parts.acknowledgments -]
+\normalsize
+[# endif #]
+
+% --------------------------------------------------------------------------
+% Bibliography
+% --------------------------------------------------------------------------
+[# if doc.bibliography #]
+{\small
+\printbibliography
+}
+[# endif #]
+
+\end{document}

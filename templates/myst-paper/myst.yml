@@ -1,0 +1,14 @@
+# Canonical ISR + IEEE MyST Paper Configuration (RAE Template)
+version: 1
+project:
+  title: "Paper Title: Replace with Clear, Jargon-Free Scientific Title"
+  bibliography:
+    - references.bib
+  numbering:
+    equation:
+      template: "Eq. %s"
+  toc:
+    - file: manuscript.md
+site:
+  title: ISR Manuscript Preview
+  template: book-theme
