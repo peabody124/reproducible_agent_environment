@@ -139,6 +139,7 @@ See `.devcontainer/` in this repo as the canonical reference.
 | `datajoint-biomechanics-schema` | DataJoint pipeline schema reference | Auto — domain queries |
 | `pose-datajoint` | Python code patterns for DataJoint pose queries | Auto — domain queries |
 | `isr-paper-writing` | Scaffold, edit, and critique MyST manuscripts (`templates/myst-paper`) aligned to R. James Cotton's pre-2026 voice | Auto — paper writing & editing |
+| `ste100-spec` | Author, audit, and maintain ~80% ASD-STE100 specifications (`docs/SPEC.md`, `docs/specs/`, `docs/papers/<slug>/SPEC.md`) and technical walkthroughs | Auto — specs & STE-100 explanations |
 
 ### Guidelines (bundled in `skills/enforce-guidelines/references/`)
 

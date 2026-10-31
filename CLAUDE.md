@@ -35,6 +35,7 @@ The **single source of truth** for tool configuration (ruff, pytest, coverage) i
 - `/investigation` — Scaffold structured research in scratch/
 - `/excalidraw` — Generate Excalidraw diagrams, render to PNG/SVG, visually verify
 - `/semi-formal-code-reasoning` — Structured reasoning templates for patch equivalence, fault localization, code QA, and code review
+- `/ste100-spec` — Author, audit, and maintain ~80% ASD-STE100 (Simplified Technical English) specifications (`docs/SPEC.md`, `docs/specs/`, `docs/papers/<slug>/SPEC.md`) and technical walkthroughs
 - `/github-activity-review` — Periodic cross-repo GitHub activity review with thematic organization
 
 ### Domain-Specific
