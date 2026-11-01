@@ -16,7 +16,7 @@ TEMPLATE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 mkdir -p "$TARGET_DIR"
 cp -rn "$TEMPLATE_DIR/"* "$TARGET_DIR/" 2>/dev/null || true
 cp -rn "$TEMPLATE_DIR/.gitignore" "$TARGET_DIR/.gitignore" 2>/dev/null || true
-chmod +x "$TARGET_DIR/build_isr.sh" "$TARGET_DIR/build_ieee.sh" "$TARGET_DIR/scripts/diff_commits_pdf.py"
+chmod +x "$TARGET_DIR/build_isr.sh" "$TARGET_DIR/build_ieee.sh" "$TARGET_DIR/scripts/diff_commits_pdf.py" "$TARGET_DIR/scripts/audit_zotero_bib.py" "$TARGET_DIR/scripts/ensure_inkscape_and_check_fonts.py" "$TARGET_DIR/scripts/generate_paper_figures.py" 2>/dev/null || true
 
 python3 - "$TARGET_DIR" "$PAPER_TITLE" "$PAPER_SLUG" <<'PY'
 from pathlib import Path

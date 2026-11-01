@@ -1,4 +1,4 @@
-_build/
+/_build/
 *.aux
 *.bbl
 *.bcf
@@ -10,8 +10,9 @@ _build/
 *.run.xml
 *.synctex.gz
 *.toc
-main.bib
-isrpaper.cls
-isr-logo.pdf
-IEEEtran.cls
-exports/
+/main.bib
+/isrpaper.cls
+/isr-logo.pdf
+/ieeeconf.cls
+/IEEEtran.cls
+/exports/

@@ -6,6 +6,11 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 PAPER_STEM="${1:-paper_isr}"
+export PATH="$HOME/.local/bin:$PATH"
+
+if [ -f scripts/ensure_inkscape_and_check_fonts.py ]; then
+  python3 scripts/ensure_inkscape_and_check_fonts.py --ensure-inkscape
+fi
 
 myst build --tex manuscript.md
 
@@ -27,6 +32,11 @@ if grep -qE 'Citation.*undefined|There were undefined references|could not be fo
   echo "ERROR: unresolved citations or references remain in ${PAPER_STEM}.pdf" >&2
   grep -E 'Citation.*undefined|Reference.*undefined' "${PAPER_STEM}.log" >&2 || true
   exit 1
+fi
+
+# Verify IEEE/publisher font compliance: 0 Type 3 bitmap fonts, 100% embedded fonts
+if [ -f scripts/ensure_inkscape_and_check_fonts.py ]; then
+  python3 scripts/ensure_inkscape_and_check_fonts.py --check-pdf "${PAPER_STEM}.pdf"
 fi
 
 echo "Built ${PAPER_STEM}.pdf successfully."

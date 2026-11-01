@@ -1,2 +1,11 @@
-% Populate via local Zotero API:
-% curl -s "http://localhost:23119/api/users/0/items?q=Cotton&format=bibtex" >> references.bib
+% Populate via local Zotero API and stamp `zotero_key = {<8-CHAR-KEY>}` on every entry:
+%   curl -s "http://localhost:23119/api/users/0/items?q=Cotton&format=bibtex" >> references.bib
+%   python scripts/audit_zotero_bib.py references.bib --stamp --verify-online
+
+@inproceedings{cotton2025biomechanical,
+  title = {Biomechanical Reconstruction with Confidence Intervals from Multiview Markerless Motion Capture},
+  author = {Cotton, R. James},
+  booktitle = {Annual International Conference of the IEEE Engineering in Medicine and Biology Society (EMBC)},
+  year = {2025},
+  zotero_key = {PXQCMRJA}
+}

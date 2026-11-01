@@ -131,13 +131,15 @@ docs/papers/<paper_slug>/
 ├── discussion.md                # Synthesis + forthcoming "Limitations and Future Directions" subsection
 ├── acknowledgments.md           # Funding, cohort, and mandatory AI usage acknowledgment
 ├── appendix.md                  # Exhaustive per-bone/per-joint tables, derivations, sensitivity grids
-├── references.bib               # Populated via local Zotero API (http://localhost:23119/api)
+├── references.bib               # Grounded in local Zotero API with `zotero_key = {<8-CHAR-KEY>}` on every entry
 ├── BUILD.md                     # Git commit provenance table + exact reproduction commands
-├── build_isr.sh                 # MyST -> XeLaTeX + Biber -> 2x XeLaTeX + unresolved-citation gate
-├── build_ieee.sh                # MyST -> XeLaTeX + Biber -> 2x XeLaTeX (ieeeconf) + unresolved-citation gate
+├── build_isr.sh                 # MyST -> Inkscape SVG->PDF -> XeLaTeX + Biber -> 2x XeLaTeX + citation & pdffonts gate
+├── build_ieee.sh                # MyST -> Inkscape SVG->PDF -> XeLaTeX + Biber -> 2x XeLaTeX (ieeeconf) + citation & pdffonts gate
 ├── scripts/
-│   ├── generate_paper_figures.py # Deterministic Tufte serif figure generator
-│   └── diff_commits_pdf.py       # Word-level redline PDF diff between any 2 Git commits/tags/WORKTREE
+│   ├── generate_paper_figures.py         # Deterministic Tufte serif figure generator (.svg primary + .pdf + .png, Type 42 fonts)
+│   ├── ensure_inkscape_and_check_fonts.py # Ensures inkscape CLI shim + STIX fonts & verifies 0 Type 3 / 100% embedded fonts via pdffonts
+│   ├── audit_zotero_bib.py               # Zotero reference grounding auditor, `zotero_key` stamper & Crossref/arXiv verifier
+│   └── diff_commits_pdf.py               # Word-level redline PDF diff between any 2 Git commits/tags/WORKTREE
 └── templates/
     ├── isr/                     # isrpaper.cls, isr-logo.pdf, template.tex, template.yml (single/two-col, orange/blue)
     └── ieeeconf/                # ieeeconf.cls, template.tex, template.yml
@@ -154,6 +156,18 @@ docs/papers/<paper_slug>/
 4. **Mandatory AI Usage Acknowledgment (`acknowledgments.md`):**
    - Every ISR manuscript must include `acknowledgments.md` in `manuscript.md` with the standard AI-assistance disclosure (included by default in `templates/myst-paper/acknowledgments.md`):
      > *"AI-assisted coding and research agents, including Claude (Anthropic) and Google Antigravity, were used for code development, running experiments, and assistance with manuscript preparation. The manuscript was extensively reviewed and verified by the authors, who take full responsibility for its content."*
+5. **Mandatory Zotero Reference Grounding & Identifier Stamping (`zotero_key = {<8-CHAR-KEY>}`):**
+   - Every reference in `references.bib` must be grounded in R. James Cotton's Zotero library (`http://localhost:23119/api/users/0/items`) and carry its unambiguous 8-character Zotero item identifier (`zotero_key = {<KEY>}`).
+   - Always run the Zotero reference auditor whenever adding or revising citations:
+     ```bash
+     python scripts/audit_zotero_bib.py references.bib --stamp --verify-online
+     ```
+   - This script verifies every BibTeX entry against the local Zotero library (validating title/author consistency on DOI and arXiv matches to catch corrupted DOIs), stamps `zotero_key = {<KEY>}` into `references.bib` (and `main.bib`), and checks any missing entries against Crossref, OpenAlex, and arXiv (`--export-missing-bib missing_for_zotero.bib`) so verified new references can be imported into Zotero and stamped with their `zotero_key`. Never leave unverified or hallucinated BibTeX entries in a manuscript.
+6. **`.svg` Primary Figures for MyST Markdown, Inkscape PDF Compilation, IEEE Type-3 Font Prevention & TikZ Policy:**
+   - **Generate `.svg` Alongside `.pdf` & `.png` (`![](figures/fig_name.svg)`):** Figure-generation scripts (`scripts/generate_paper_figures.py` / `save_paper_figure()`) must output **`.svg` as the primary format referenced in MyST `.md` files** alongside `.pdf` and `.png`. `.svg` renders natively as crisp scalable vector graphics in MyST Markdown and MyST Studio web previews, while `myst build --tex` automatically converts `.svg -> .pdf` via `inkscape` for LaTeX compilation.
+   - **Ensure `inkscape` CLI + Fontconfig STIX Fonts (`scripts/ensure_inkscape_and_check_fonts.py --ensure-inkscape`):** Both `build_isr.sh` and `build_ieee.sh` automatically invoke `ensure_inkscape_and_check_fonts.py --ensure-inkscape` before `myst build --tex` to guarantee that `inkscape` is on `PATH` (falling back to a zero-GUI `~/.local/bin/inkscape` shim wrapping `rsvg-convert -f pdf`) and that Matplotlib's bundled `STIXGeneral*.ttf` and `STIXNonUnicode*.ttf` fonts are registered in `~/.local/share/fonts/matplotlib` so math symbols embed as real TrueType outlines.
+   - **Prevent IEEE-Rejected Type 3 Fonts (`pdf.fonttype = 42`, `ps.fonttype = 42`, `svg.fonttype = "none"`, `mathtext.fontset = "stix"`):** Always set `"pdf.fonttype": 42`, `"ps.fonttype": 42`, `"svg.fonttype": "none"`, `"mathtext.fontset": "stix"`, and `"text.usetex": False` in Matplotlib `rcParams`. Both `build_isr.sh` and `build_ieee.sh` run `python3 scripts/ensure_inkscape_and_check_fonts.py --check-pdf <paper>.pdf` (`pdffonts`) after compilation and **fail the build if any `Type 3` bitmap font or unembedded font (`emb = no`) is present**.
+   - **Keep Existing TikZ Diagrams Untouched (`.tikz.tex` / `.pdf`):** Do **not** convert standalone/inline TikZ diagrams to `.svg` (converting TikZ PDFs via `pdftocairo -svg` turns Type 1C fonts into unsearchable `<path>` symbols with 0 font objects in `pdffonts`). Keep existing TikZ diagrams untouched as `.tikz.tex` / `.pdf` for LaTeX builds, and use `.svg` as the primary format for all programmatic Python/Matplotlib/vector figures.
 
 ---
 
@@ -207,7 +221,7 @@ Cycle 5 (Tufte Serif Figures, Dual ISR/IEEE PDF Build, Visual Page Inspection & 
 
 ### Cycle 1 — Pre-2026 Voice Calibration & Literature Grounding via Local Zotero (`127.0.0.1:23119`)
 - Query `http://localhost:23119/api/users/0/items?q=Cotton&limit=100` filtered to **`year <= 2025`** and read 1–2 closest pre-2026 human-written manuscripts by R. James Cotton (e.g., `BiomechanicalConfidenceIntervals.md`, `Differentiable Biomechanics.md`, `Biomechanical Follower.md`, `Causal Framework for Precision Rehab.md`) before drafting or rewriting prose.
-- Populate `references.bib` directly from Zotero (`?format=bibtex`) so every citation key is verified against real metadata (no hallucinated BibTeX entries).
+- Populate `references.bib` directly from Zotero (`?format=bibtex`) and run `python scripts/audit_zotero_bib.py references.bib --stamp --verify-online` so every entry carries its 8-character `zotero_key = {<KEY>}` and any reference not yet in Zotero is verified against Crossref/OpenAlex/arXiv for import into Zotero (zero hallucinated or corrupted BibTeX entries).
 
 ### Cycle 2 — Round-1 Three-Subagent Review Triad
 Spawn three parallel subagents with non-overlapping responsibilities:
@@ -238,13 +252,15 @@ Writing the paper alongside the code routinely exposes subtle evaluation or mode
 1. **Statistical Unit of Analysis & Degrees of Freedom:** Never treat repeated trials, strides, or frames from the same participant as independent samples in $t$-tests or $p$-values (e.g., 59 trials across $N=12$ participants must use participant-level paired statistics or mixed-effects models with $df = N - 1$, never trial-level $df = 58$).
 2. **Strict Label-Blindness at Inference:** Verify in code that no evaluation metric or test-time inference path leaks ground-truth clinical labels, ground-truth body mass/height (when evaluating video-only prediction), or post-hoc per-trial bias subtraction without calling it out explicitly.
 3. **Metric & Baseline Parity:** Verify that baselines and our model are evaluated on the exact same frames, coordinate conventions (`KAD1-IMR` vs. `CMR`), and unit scales (`mm` vs. `cm`).
+4. **100% Zotero Reference Grounding (`zotero_key` Audit):** Re-run `python scripts/audit_zotero_bib.py references.bib --stamp --verify-online` to confirm every cited paper has a valid `zotero_key = {<8-CHAR-KEY>}` in Zotero (or is exported with verified DOI/arXiv metadata for immediate Zotero import) and zero DOI/title/author mismatches exist.
 
 ### Cycle 5 — Tufte Serif Figures, Dual PDF Compilation, Visual Inspection & Redline Diff PDF
-1. **Tufte Serif Figure Generation (`scripts/generate_paper_figures.py`):**
-   - Use serif typography (`DejaVu Serif` / `Times`, `mathtext.fontset = "stix"`) with mathematical symbols identical to `methods.md`.
+1. **Tufte Serif Figure Generation (`scripts/generate_paper_figures.py` — `.svg` Primary + `.pdf` + `.png`, Zero Type 3 Fonts):**
+   - Configure Matplotlib with `"font.family": "serif"`, `"font.serif": ["Times New Roman", "Liberation Serif", "DejaVu Serif", "Palatino"]`, `"mathtext.fontset": "stix"`, `"text.usetex": False`, `"pdf.fonttype": 42`, `"ps.fonttype": 42`, and `"svg.fonttype": "none"` so mathematical symbols match `methods.md` and zero Type 3 bitmap fonts are ever emitted.
+   - Save every programmatic figure as **`.svg` (referenced in MyST `.md` files via `![](figures/fig_name.svg)`)** alongside `.pdf` and `.png` with `transparent=True`. Keep existing standalone/inline TikZ diagrams untouched as `.tikz.tex` / `.pdf`.
    - Use left-aligned 2-line panel headers (**bold** panel letter + claim on line 1; muted `#475569` subtitle with $N$, units, and statistic on line 2), despined top/right axes, and `1:1` native pixel aspect ratios (`aspect="equal"`) on all camera crops and 3D renders.
-2. **Dual ISR & IEEE Compilation + Page-by-Page Visual Inspection:**
-   - Run `./build_isr.sh` and `./build_ieee.sh`, render pages to PNG (`pdftoppm -png -r 150 <paper>_isr.pdf page`), and visually inspect every page (or preview live in **Sheprd MyST Studio** via `./sheprd myst` on `http://127.0.0.1:7319`).
+2. **Dual ISR & IEEE Compilation + `pdffonts` Verification + Page-by-Page Visual Inspection:**
+   - Run `./build_isr.sh` and `./build_ieee.sh` (which automatically verify `inkscape` SVG-to-PDF conversion and run `pdffonts` to assert 0 Type 3 bitmap fonts and 100% `emb = yes`), render pages to PNG (`pdftoppm -png -r 150 <paper>_isr.pdf page`), and visually inspect every page (or preview live in **Sheprd MyST Studio** via `./sheprd myst` on `http://127.0.0.1:7319`).
 3. **Word-Level Redline Diff PDF (`scripts/diff_commits_pdf.py`):**
    - Whenever completing an editing cycle or preparing a revision for co-author review, generate a publication-style inline word-diff PDF comparing the baseline commit/tag against the updated manuscript:
      ```bash
