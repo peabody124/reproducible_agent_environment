@@ -161,7 +161,7 @@ git commit -m "feat: Initialize {name} with RAE structure"
 
 ### 8. Create CLAUDE.md
 
-Create a `CLAUDE.md` with project-specific instructions. If the project uses DataJoint, **always** include this section:
+Copy or adapt `templates/CLAUDE.md` to create a `CLAUDE.md` with project-specific instructions, **always** including the DataJoint read-only rule (if applicable), the Fail-Fast Field Access rule, and the no-Claude-session-links rule:
 
 ```markdown
 ## CRITICAL: NEVER Modify Database Entries
@@ -172,6 +172,10 @@ Create a `CLAUDE.md` with project-specific instructions. If the project uses Dat
 - Altering any computed table entries
 
 Database entries are shared state used by the entire lab. Changing a settings entry changes it for everyone and invalidates prior results computed with those settings.
+
+## Fail-Fast Field Access & Anti-Defensive-Programming
+
+Never use defensive `getattr(obj, "field", None)` or `dict.get("field", None)` (nor broad `try/except Exception: pass`) when accessing expected struct, dataclass, Equinox module, or dictionary fields. Use direct named access (`person.mhr` / `person.mhr.joint_coords` or `data["mhr"]`) so schema mismatches fail fast with `AttributeError` or `KeyError`. (In `WheelchairPropulsion`, a defensive `getattr(person, "mhr", None)` / `getattr(person.mhr, "joints_3d", None)` check on a nonexistent attribute name silently evaluated `mhr_hand21` to `None` on every frame without raising an error, silently disabling the 20-DOF finger fit.) Always check for and reject this anti-pattern during code review and PR review.
 ```
 
 - You MUST include this section if datajoint is in the project's dependencies

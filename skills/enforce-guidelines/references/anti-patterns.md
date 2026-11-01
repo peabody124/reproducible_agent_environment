@@ -9,12 +9,15 @@ These patterns indicate AI-generated code that needs cleanup. Use the `/deslop` 
 - Section dividers or decorative comments adding no value
 - Comments describing what code does rather than why
 
-## Paranoid Error Handling
+## Paranoid Error Handling & Silent Defensive Lookups
 
+- **Defensive `getattr(obj, "field", None)` or `dict.get("field", None)` on known schemas:** Never use `getattr(..., None)` or `.get(..., None)` when accessing expected attributes or keys on pipeline structs, dataclasses, Equinox modules, or result dicts. Use direct access (`obj.field` or `d["field"]`) so typos or schema drift raise `AttributeError` or `KeyError` immediately.
+  - *Canonical failure mode:* In `WheelchairPropulsion`, `getattr(person, "mhr", None)` / `getattr(person.mhr, "joints_3d", None)` referenced a nonexistent attribute name and silently evaluated `mhr_hand21` to `None` on every frame without raising an error, silently disabling the 20-DOF finger fit.
 - Try/catch blocks around internal code that won't fail
 - Catching generic `Exception` without specific reason
 - Swallowing errors with `pass` or logging-only handlers
 - Defensive checks for impossible states
+- **Code Review Mandate:** Always grep/check diffs during code review and PR review for `getattr(..., None)`, `.get(`, and broad `try/except` blocks on internal data structures.
 
 ## Type Evasion
 

@@ -281,6 +281,11 @@ BEHAVIORAL ANALYSIS:
 INVARIANT CHECK:
   For each invariant or assumption the code relies on:
     I1: [invariant] — PRESERVED / BROKEN by change C[N] because [reason]
+    I_FAILFAST (MANDATORY): Does the diff introduce any defensive `getattr(obj, "field", None)`,
+        `d.get("field", None)`, or broad `try/except Exception: pass` on known/expected schemas?
+        (Cite exact lines; reject in favor of direct `obj.field` / `d["field"]` access so schema
+        mismatches raise `AttributeError` / `KeyError` rather than silently disabling downstream
+        stages as in the `WheelchairPropulsion` `getattr(person, "mhr", None)` 20-DOF finger-fit bug.)
 
 EDGE CASES:
   E1: [input/state] -> Pre: [behavior] | Post: [behavior] | Safe? [Y/N]

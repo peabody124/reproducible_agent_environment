@@ -15,6 +15,7 @@ for the full list of slop patterns to catch.
 
 Common slop to remove:
 - Extra comments that a human wouldn't add or that are inconsistent with the rest of the file
+- **Defensive `getattr(obj, "field", None)` or `d.get("field", None)` on known/expected schemas:** Replace with direct fail-fast field/key access (`obj.field` or `d["field"]`). Never allow `getattr(..., None)` to silently evaluate a misspelled attribute to `None` (as in the `getattr(person, "mhr", None)` bug that silently disabled the 20-DOF finger fit on every frame).
 - Extra defensive checks or try/catch blocks that are abnormal for that area of the codebase (especially if called by trusted / validated codepaths)
 - Casts to `Any` to get around type issues
 - Placeholder patterns (TODOs without context, "Phase 1" comments, commented-out code)

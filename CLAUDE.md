@@ -57,6 +57,10 @@ See `skills/enforce-guidelines/references/coding-standards.md` for the full rule
 In short: **DO NOT** call `update1()`, `delete()`, `drop()` on any DataJoint table.
 Database entries are shared lab state.
 
+## Fail-Fast Field Access & Anti-Defensive-Programming
+
+Never use defensive `getattr(obj, "field", None)` or `dict.get("field", None)` (nor broad `try/except Exception: pass`) when accessing expected struct, dataclass, Equinox module, or dictionary fields. Use direct named access (`person.mhr` / `person.mhr.joint_coords` or `data["mhr"]`) so schema mismatches fail fast with `AttributeError` or `KeyError`. In `WheelchairPropulsion`, a defensive `getattr(person, "mhr", None)` / `getattr(person.mhr, "joints_3d", None)` check on a nonexistent attribute name caused `mhr_hand21` to evaluate to `None` on every frame without raising an error, silently disabling the 20-DOF finger fit. Always check for and reject this anti-pattern during code review and PR review.
+
 ## Commits and PRs: no Claude session links
 
 Never put Claude session information in a commit message, PR title or body,

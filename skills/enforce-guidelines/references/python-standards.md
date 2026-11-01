@@ -92,10 +92,11 @@ See `references/repo-structure.md` for complete requirements.
 | Linting (ruff) | `[project.optional-dependencies] dev` |
 | Optional features | `[project.optional-dependencies] feature-name` |
 
-## Error Handling
+## Error Handling & Fail-Fast Field Access
 
 - Only validate at system boundaries (user input, external APIs, file I/O)
 - Trust internal code and framework guarantees
+- **MUST NOT** use `getattr(obj, "field", None)` or `d.get("field", None)` on known/expected schemas (structs, dataclasses, Equinox modules, pipeline dicts). Access fields directly (`obj.field`, `d["field"]`) so schema mismatches raise `AttributeError` or `KeyError` immediately instead of silently returning `None` (e.g., the `WheelchairPropulsion` `getattr(person, "mhr", None)` / `getattr(person.mhr, "joints_3d", None)` bug that silently disabled 20-DOF finger fitting on every frame).
 - Don't add error handling for scenarios that can't happen
 - Don't catch generic `Exception` without re-raising or specific handling
 

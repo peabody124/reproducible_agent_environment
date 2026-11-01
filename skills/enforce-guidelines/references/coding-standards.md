@@ -20,11 +20,12 @@ Database entries are shared state used by the entire lab. Changing a settings en
 3. Verify the fix by running the reproduction script and ensuring it passes
 4. Commit the test to prevent regression
 
-## Fail Fast
+## Fail-Fast Field Access & Anti-Defensive-Programming
 
-- MUST NOT hide missing data behind defaults (`dict.get`, `dict.setdefault`, `key in dict else`)
-- MUST NOT use warning-only handlers for errors
-- Let crashes surface real issues, especially regarding state management or validation errors
+- **MUST NOT** use defensive `getattr(obj, "field", None)` or `dict.get("field", None)` (nor `dict.setdefault` or `hasattr` checks) when accessing expected struct, dataclass, Equinox module, or dictionary fields. Use direct named access (`person.mhr` / `person.mhr.joint_coords` or `data["mhr"]`) so schema or attribute-name mismatches fail immediately with `AttributeError` or `KeyError`.
+- **Canonical Incident (`WheelchairPropulsion`):** A defensive `getattr(person, "mhr", None)` / `getattr(person.mhr, "joints_3d", None)` check on a nonexistent attribute name (`joints_3d` instead of `joint_coords`) caused `mhr_hand21` to silently evaluate to `None` on every frame without raising an error, silently disabling the 20-DOF finger fit across the entire run.
+- **MUST NOT** swallow exceptions with broad `try / except Exception: pass` or warning-only handlers around internal pipeline stages, DataJoint queries, or checkpoint loads.
+- **Code Review & PR Review Requirement:** Every code review and PR review MUST explicitly inspect the diff for `getattr(..., None)`, `.get(..., None)`, and broad `try/except` blocks on known schemas and reject them in favor of direct fail-fast access.
 
 ## DRY & Code Organization
 

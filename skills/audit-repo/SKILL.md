@@ -86,6 +86,7 @@ Present a summary table:
 
 ### Recommended additions to CLAUDE.md
 - Document F722 exception and why it's needed
+- Ensure the **Fail-Fast Field Access & Anti-Defensive-Programming Rule** (no `getattr(obj, "field", None)` or `d.get("field", None)` on known schemas; cite the `getattr(person, "mhr", None)` silent 20-DOF finger-fit bug) is documented in `CLAUDE.md` / `AGENTS.md`
 - ...
 ```
 
