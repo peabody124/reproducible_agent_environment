@@ -10,7 +10,7 @@ This directory contains templates for scaffolding new Python projects with RAE s
 | `pyproject.toml` | Base pyproject.toml structure (used by scaffold-repo) |
 | `devcontainer-cpu/` | Lightweight CPU-only devcontainer |
 | `devcontainer-gpu/` | Full GPU devcontainer with CUDA + cuDNN |
-| `myst-paper/` | Canonical MyST Markdown paper scaffold with dual ISR (`templates/isr`) and IEEE (`templates/ieeetrans`) builds, `build_isr.sh`, `build_ieee.sh`, `BUILD.md`, and `scripts/diff_commits_pdf.py` |
+| `myst-paper/` | Canonical MyST Markdown paper scaffold with dual ISR (`templates/isr`) and IEEE conference (`templates/ieeeconf`, the IEEE RAS class used by ICORR) builds, `build_isr.sh`, `build_ieee.sh`, `BUILD.md`, and `scripts/diff_commits_pdf.py` |
 
 ## Devcontainer Templates
 

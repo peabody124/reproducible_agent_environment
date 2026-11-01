@@ -1,6 +1,6 @@
 jtex: v1
-title: ieeetrans_062824 
-description: Myst template for IEEE Transactions publications
+title: ieeeconf 
+description: Myst template for IEEE publications
 version: 1.0.0
 license: MIT
 authors:
@@ -13,7 +13,7 @@ tags:
   - preprint
   - arxiv
   - ieee
-source: https://github.com/peabody124/myst-ieeetrans
+source: https://github.com/peabody124/myst-template-ieeeconf
 parts:
   - id: abstract
     required: true
@@ -37,7 +37,7 @@ doc:
   - id: bibliography
 files:
   - template.tex
-  - IEEEtran.cls
+  - ieeeconf.cls
 style:
   bibliography: natbib
 
@@ -46,6 +46,8 @@ packages:
   - amsfonts
   - amssymb
   - booktabs
+  - tabularx
+  - fontspec
   - graphicx
   - hyperref
   - biblatex

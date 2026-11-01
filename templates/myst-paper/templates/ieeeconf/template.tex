@@ -1,0 +1,159 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%2345678901234567890123456789012345678901234567890123456789012345678901234567890
+%        1         2         3         4         5         6         7         8
+
+\documentclass[letterpaper, 10 pt, conference]{ieeeconf}  % Comment this line out if you need a4paper
+
+%\documentclass[a4paper, 10pt, conference]{ieeeconf}      % Use this line for a4 paper
+
+\IEEEoverridecommandlockouts                              % This command is only needed if 
+                                                          % you want to use the \thanks command
+
+\overrideIEEEmargins                                      % Needed to meet printer requirements.
+
+% Built with XeLaTeX for Unicode text: ieeeconf.cls sets \rmdefault to ptm (Type 1 Times), which
+% XeLaTeX cannot load, so an OpenType Times (or the metric-compatible Liberation Serif) is used.
+\usepackage{fontspec}
+\IfFontExistsTF{TeX Gyre Termes}{\setmainfont{TeX Gyre Termes}}{\setmainfont{Liberation Serif}}
+
+%In case you encounter the following error:
+%Error 1010 The PDF file may be corrupt (unable to open PDF file) OR
+%Error 1000 An error occurred while parsing a contents stream. Unable to analyze the PDF file.
+%This is a known problem with pdfLaTeX conversion filter. The file cannot be opened with acrobat reader
+%Please use one of the alternatives below to circumvent this error by uncommenting one or the other
+%\pdfobjcompresslevel=0
+%\pdfminorversion=4
+
+% See the \addtolength command later in the file to balance the column lengths
+% on the last page of the document
+
+% The following packages can be found on http:\\www.ctan.org
+%\usepackage{graphics} % for pdf, bitmapped graphics files
+%\usepackage{epsfig} % for postscript graphics files
+%\usepackage{mathptmx} % assumes new font selection scheme installed
+%\usepackage{times} % assumes new font selection scheme installed
+%\usepackage{amsmath} % assumes amsmath package installed
+%\usepackage{amssymb}  % assumes amsmath package installed
+
+
+%%%%%%%%%%%%%%%  Packages   %%%%%%%%%%%%%%%
+[-IMPORTS-]
+
+% % Include other packages here, before hyperref.
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{gensymb}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\RequirePackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{orcidlink}  % For the \orcidlink
+
+% having to use biblatex due to non-utf8 characters in some names, although
+% technically not fully compliant with IEEE submission guidelines. Matching
+% closely with instructions from https://tex.stackexchange.com/a/514147
+\usepackage[
+    backend=biber,
+    style=ieee,
+    natbib=true,
+    doi=false,
+    url=false,
+    isbn=false,
+]{biblatex}
+
+
+
+\addbibresource{[- doc.bibliography | join(", ") -]}
+\renewcommand*{\bibfont}{\footnotesize}
+\setlength{\biblabelsep}{\labelsep}
+
+\AtEveryBibitem{%
+   \clearfield{Title}%
+   \clearfield{eprint}%
+   \clearfield{note}%
+}
+
+% myst outputs citet and citep commands, but biblatex uses textcite and parencite
+\renewcommand{\citet}[1]{\textcite{#1}}
+\renewcommand{\citep}[1]{\parencite{#1}}
+
+\newcommand{\printglossaries}{}
+
+%%%%%%%%%%%%%%%%   Title   %%%%%%%%%%%%%%%%
+\title{[-doc.title-]}
+
+
+%%%%%%%%%%%%%%%  Author list  %%%%%%%%%%%%%%%
+
+\author{
+[# for author in doc.authors #]
+	[--author.name-][#- if author.orcid #] \orcidlink{[- author.orcid -]} [# endif -#]$^{{[--author.affiliations|join(', ', 'index')--]}}$
+	[#- if not loop.last #] \and [# endif #]
+[# endfor #] % <-this % stops a space
+[# if parts.thanks #]
+\thanks{
+[-parts.thanks-]
+}
+[# endif #]
+[# for affiliation in doc.affiliations #]
+\thanks{
+$^{{[-affiliation.index-]}}$ {[-affiliation.value.name-]}
+} % <-this % stops a space
+[# endfor #]
+}
+
+%%%%%%%%%%%%%%%  Document  %%%%%%%%%%%%%%%
+
+\begin{document}
+
+\maketitle
+
+
+%%%%%%%%%%%%%%%  Abstract  %%%%%%%%%%%%%%%
+
+[# if parts.abstract #]
+\begin{abstract}
+[-parts.abstract-]\\
+\end{abstract}
+[# endif #]
+
+
+%%%%%%%%%%%%%%%  Main text   %%%%%%%%%%%%%%%
+
+[-CONTENT-]
+
+%%%%%%%%%%%%% Acknowledgements %%%%%%%%%%%%%
+[# if parts.acknowledgments #]
+\section*{Acknowledgements}
+\footnotesize
+[- parts.acknowledgments -]
+\normalsize
+[# endif #]
+
+[# if options.link #]
+\section*{Original article}
+\footnotesize
+This article is available online at the following URL: \href{[-options.link-]}{[-options.link-]}
+\normalsize
+[# endif #]
+
+%%%%%%%%%%%%%%   Bibliography   %%%%%%%%%%%%%%
+[# if doc.bibliography #]
+{\small
+\printbibliography
+}
+[# endif #]
+
+%%%%%%%%%%%%%%   Appendix   %%%%%%%%%%%%%%
+[# if parts.appendix #]
+\clearpage
+\onecolumn
+\section*{Appendix}
+\setcounter{secnumdepth}{0}
+\normalfont
+[-parts.appendix-]
+\clearpage
+[# endif #]
+
+\end{document}

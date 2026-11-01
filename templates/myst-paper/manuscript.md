@@ -26,12 +26,12 @@ exports:
     output: paper_isr.tex
     paper_date: "October 2026"
     correspondence: "rcotton@sralab.org"
-  # Secondary IEEE two-column submission target from the exact same MyST Markdown sources
+  # Secondary IEEE two-column conference target (ieeeconf, the IEEE RAS class used by ICORR) from the exact same MyST Markdown sources
   - format: pdf
-    template: ./templates/ieeetrans
+    template: ./templates/ieeeconf
     output: paper_ieee.pdf
   - format: tex
-    template: ./templates/ieeetrans
+    template: ./templates/ieeeconf
     output: paper_ieee.tex
 ---
 

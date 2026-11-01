@@ -5,7 +5,7 @@ description: Guide, scaffold, edit, and critique scientific manuscripts in R. Ja
 
 # ISR Scientific Paper Writing, Pre-2026 Voice Alignment & RAE MyST Workflow (`isr-paper-writing`)
 
-Use this skill whenever scaffolding, drafting, revising, critiquing, or auditing scientific manuscripts (`isr` single-column preprints and `ieeetrans` / conference submissions) across the Intelligent Sensing & Rehabilitation (ISR) research portfolio.
+Use this skill whenever scaffolding, drafting, revising, critiquing, or auditing scientific manuscripts (`isr` single-column preprints and `ieeeconf` IEEE conference submissions such as ICORR) across the Intelligent Sensing & Rehabilitation (ISR) research portfolio.
 
 ---
 
@@ -134,13 +134,13 @@ docs/papers/<paper_slug>/
 ├── references.bib               # Populated via local Zotero API (http://localhost:23119/api)
 ├── BUILD.md                     # Git commit provenance table + exact reproduction commands
 ├── build_isr.sh                 # MyST -> XeLaTeX + Biber -> 2x XeLaTeX + unresolved-citation gate
-├── build_ieee.sh                # MyST -> pdflatex + Biber -> 2x pdflatex + unresolved-citation gate
+├── build_ieee.sh                # MyST -> XeLaTeX + Biber -> 2x XeLaTeX (ieeeconf) + unresolved-citation gate
 ├── scripts/
 │   ├── generate_paper_figures.py # Deterministic Tufte serif figure generator
 │   └── diff_commits_pdf.py       # Word-level redline PDF diff between any 2 Git commits/tags/WORKTREE
 └── templates/
     ├── isr/                     # isrpaper.cls, isr-logo.pdf, template.tex, template.yml (single/two-col, orange/blue)
-    └── ieeetrans/               # IEEEtran.cls, template.tex, template.yml
+    └── ieeeconf/                # ieeeconf.cls, template.tex, template.yml
 ```
 
 ### 2.3 Key Build & Provenance Rules in the RAE MyST Template
