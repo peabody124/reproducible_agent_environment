@@ -38,7 +38,8 @@ feed them.
 
 | Symptom | Most likely cause | Section |
 |---------|------------------|---------|
-| Every call to a jit'd fn is slow; occasional 10-100x latency outliers | Retracing (static Python scalar or changing shapes) | 1, 2 |
+| Every call to a jit'd fn is slow; occasional 10-100x latency outliers | Retracing (static Python scalar, changing shapes, or function-local `@jit`) | 1, 2 |
+| Batch/sequence helper reports ~50–100 ms/frame "warm" when the inner model is ~5 ms/frame | Function-local `@eqx.filter_jit` / `jax.jit(vmap(lambda ...))` rebuilt on every outer call, amortizing a multi-second compile over the batch loop | 1, 2 |
 | GPU memory grows step over step inside a "fixed-size" loop | Retained compiled executables from retraces, or an unbounded feature cache | 1, 2 |
 | Process disappears mid-run, log ends abruptly, **no Python traceback** | Host OOM-killer (SIGKILL) — usually unbounded host-side accumulation | 4 |
 | `XlaRuntimeError: RESOURCE_EXHAUSTED` | GPU OOM — JAX raised it; catchable and diagnosable | 5 |
@@ -53,8 +54,9 @@ feed them.
 ### How the leak happens
 
 `jax.jit` (and `eqx.filter_jit`) cache compiled executables keyed on the
-**static** parts of the call: array shapes, dtypes, pytree structure, and
-every non-array Python value. Two common ways to leak compiles:
+**function object identity** plus the **static** parts of the call: array
+shapes, dtypes, pytree structure, and every non-array Python value. Three
+common ways to leak compiles:
 
 - **Python scalar treated as static.** `eqx.filter_jit` treats anything that
   is not a JAX/NumPy array as static — including plain Python `int`s such as
@@ -64,6 +66,19 @@ every non-array Python value. Two common ways to leak compiles:
 - **Pytree leaf whose shape changes between calls.** E.g. a detector returns
   `(N_kept, H, W)` where `N_kept` depends on a score threshold; every novel
   `N_kept` recompiles all downstream jit'd consumers (resize, IoU, matching).
+- **Function-local `@eqx.filter_jit` / `@jax.jit` rebuilt on every outer call
+  (and hidden by inner-loop amortization).** A sequence or batch helper
+  (`def decode(head, images, K, ...):`) defines `@eqx.filter_jit def fwd(...)`
+  or `solve = jax.jit(jax.vmap(lambda ...))` *inside its body* to capture
+  call-local variables (`qp`, `k_jax`) in a closure. Within a single `decode()`
+  call over $T=120$ frames ($15$ batches of $8$), batch 0 pays a full XLA
+  compile (~9 s) and batches 1..14 hit the local cache (~4.5 ms/frame).
+  Averaged over $T=120$ frames, `decode()` reports ~80–85 ms/frame — hiding a
+  **9-second cold XLA compile** inside what looks like a plausible per-frame
+  forward time (~19x slower than true steady state)! Worse, as soon as
+  `decode()` returns, the local `fwd` is garbage-collected, so **every
+  subsequent call to `decode()` (every video clip, trial, or "warm" benchmark
+  repetition) builds a fresh function object and recompiles from scratch**.
 
 Each retained executable holds device memory (baked-in constants, workspace)
 and host memory (the lowered program). In a per-frame loop this looks exactly
@@ -97,6 +112,11 @@ latency spikes.
   tracker/accumulator pytree passed in and out of a jit'd step must keep
   identical leaf shapes every step — preallocate fixed-capacity slots and a
   ring-buffer index rather than appending.
+- **Define `@eqx.filter_jit` / `@jax.jit` functions once at module scope (or
+  once in `__init__`), never inside a per-call function or method body.**
+  Pass call-local arrays (`query_points`, camera intrinsics `K`, extrinsics) as
+  explicit traced arguments instead of capturing them in a function-local
+  closure.
 - If you *intentionally* discard a set of compiled variants (e.g. after a
   resolution change), call `jax.clear_caches()` to release them.
 
@@ -119,6 +139,28 @@ return masks[keep]
 # RIGHT — fixed (N_MAX, H, W) + valid mask; shape never changes.
 order = jnp.argsort(-scores)[:N_MAX]
 return masks[order], scores[order] >= threshold
+```
+
+```python
+# WRONG — @eqx.filter_jit defined inside decode() to close over qp and k_jax:
+# every call to decode() creates a brand-new `fwd` function object and pays a
+# full ~9 s XLA compile on batch 0 (amortized across the batch loop to look like
+# ~85 ms/frame instead of the true ~4.5 ms/frame steady state!).
+def decode(head, images, K, boxes, valid, *, batch_size=8):
+    qp, k_jax = head.query_points, jnp.asarray(K, jnp.float32)
+
+    @eqx.filter_jit
+    def fwd(model, ims, bxs, ok):
+        return jax.vmap(lambda im, b, v: forward_one(model, qp, im, b, v, k_jax))(ims, bxs, ok)
+
+    return [fwd(head.device_model, ...) for ...]
+
+
+# RIGHT — hoisted to module scope with qp and k_jax passed as traced arguments;
+# compiles once across the entire process lifetime.
+@eqx.filter_jit
+def _decode_batch_jit(model, qp, k_jax, ims, bxs, ok):
+    return jax.vmap(lambda im, b, v: forward_one(model, qp, im, b, v, k_jax))(ims, bxs, ok)
 ```
 
 ## 1b. The Inverse: a Cached Trace Silently Absorbing a Change
@@ -237,6 +279,46 @@ def test_step_compiles_once_across_lengths(monkeypatch):
 `assert_max_traces` makes the failure loud at the *moment* of the second
 trace (with both call signatures in the error), which is far easier to debug
 than a downstream OOM hours later.
+
+**Gotcha — `assert_max_traces` on a function-local definition is a guard that
+cannot fail across outer calls.** If a helper builds `@eqx.filter_jit` inside
+its own function body (`def decode(...): @eqx.filter_jit def fwd(...)`),
+wrapping `fwd` with `assert_max_traces(max_traces=1)` *inside* `decode()`
+creates a **brand-new guard instance on every `decode()` call** with its trace
+counter reset to `0`. Within one `decode()` call, all batches have identical
+shape so the counter reaches `1` and passes — completely blind to the fact that
+100 calls to `decode()` compiled 100 separate XLA executables! Always hoist
+both the `@eqx.filter_jit` function and its `assert_max_traces` wrapper to
+module scope, and pair them with a process-wide XLA compile counter in
+benchmarks and integration tests:
+
+```python
+import logging
+import jax
+
+
+class _CompileCounter(logging.Handler):
+    """Process-wide XLA compile counter (catches even function-local @jit rebuilds)."""
+
+    n = 0
+
+    def emit(self, record):
+        msg = record.getMessage()
+        if "Finished XLA compilation" in msg or "Compiling " in msg:
+            _CompileCounter.n += 1
+
+
+def enable_compile_count():
+    jax.config.update("jax_log_compiles", True)
+    h = _CompileCounter()
+    for name in ("jax", "jax._src.dispatch", "jax._src.interpreters.pxla", "jax._src.compiler"):
+        lg = logging.getLogger(name)
+        lg.addHandler(h)
+        lg.setLevel(logging.WARNING)
+        lg.propagate = False
+```
+Assert `_CompileCounter.n - c0 == 0` across all post-warmup calls or timed
+benchmark repetitions.
 
 ## 3. Persistent Compilation Cache Pitfalls
 
@@ -519,9 +601,13 @@ each boundary — never a global config flip made on import.
 
 ## Pre-flight Checklist for Long Sequence/Video Loops
 
-- [ ] All jit'd step functions guarded by an env-gated
+- [ ] All jit'd step functions defined at **module scope** (never inside a
+      per-call function/method body) and guarded by a module-scope
       `assert_max_traces(max_traces=1)` + a no-retrace test over the
       shape-varying inputs
+- [ ] Warm benchmarks and multi-call integration tests assert
+      `compiles_during_timed == 0` via a process-wide `jax_log_compiles`
+      handler (catching any hidden function-local `@jit` rebuilds)
 - [ ] No Python scalar that varies per call crosses a `filter_jit` boundary
 - [ ] Variable-count outputs padded to a static max with a `valid` mask
 - [ ] Per-frame outputs streamed or compressed, never appended raw

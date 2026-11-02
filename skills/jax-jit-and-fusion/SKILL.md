@@ -143,8 +143,18 @@ functions in a loop ran **~454 ms** vs **~2.7 ms** for the cached/fused form —
   some hardware the rolled loop blocks a few XLA optimizations.
 - **Many small jitted helpers → one outer jit.** Drop the inner `@jit`s and wrap
   the composite at the top. Define jitted functions **once at module scope, never
-  inside a loop or as a fresh lambda/partial per call** — the cache keys on the
-  function's hash, so a redefined-equivalent function recompiles ([guide](https://docs.jax.dev/en/latest/jit-compilation.html)).
+  inside a loop or inside a per-call function/method body (`def decode(...): @eqx.filter_jit def fwd(...):`)** —
+  the cache keys on the function object's identity and closure, so a function-local
+  `@eqx.filter_jit` or `jax.jit(jax.vmap(lambda ...))` builds a brand-new function
+  object on every outer call and recompiles from scratch ([guide](https://docs.jax.dev/en/latest/jit-compilation.html)).
+  Worst of all, if the outer function loops over $N_{\text{batches}}$ batches (e.g.
+  $T=120$ frames in batches of 8), the ~9 s cold XLA compile on batch 0 is
+  amortized over the 120 frames (`9000 ms / 120 + 5 ms ≈ 80 ms/frame`), masquerading
+  as a plausible steady-state per-frame cost (~18x slower than true steady state)
+  and rendering any warmup call of the outer function useless! Pass call-local
+  arrays (`query_points`, camera intrinsics `K`, extrinsics) as explicit traced
+  arguments to a module-scope `@eqx.filter_jit` function instead of capturing them
+  in a function-local closure.
 
 ```python
 # WRONG — host-bound: one tiny launch per element, GPU idle between them.
@@ -257,22 +267,27 @@ confounds — same hardware, warm, synchronized:
    high-wall phase = host-bound / under-fused (the thing to fix); the score is
    still wall-clock. (`nvidia-smi dmon`, or a profiler trace via
    `jax.profiler.trace` → TensorBoard for a per-op breakdown.)
-5. **Confirm it compiles once, not per call** — `JAX_LOG_COMPILES=1` should print
-   one compile then go quiet. Repeated compiles mean a retrace, not a fusion win
+5. **Confirm zero compilations during the timed window (`compiles_during_timed == 0`)** —
+   Doing a warmup call `sync(fn())` before `for _ in range(reps): sync(fn())` does
+   **not** guarantee that the timed calls are warm if `fn()` internally builds a
+   function-local `@eqx.filter_jit` or retraces! Attach a programmatic
+   `jax_log_compiles` logging handler (`_CompileCounter`) and assert
+   `compiles_during_timed == 0` over the timed repetitions. Repeated compiles mean a
+   retrace or function-local `@jit` rebuild, not steady-state compute
    (→ `jax-memory-and-retracing`).
 
 ## Pre-flight Checklist for a Hot Inference Path
 
 - [ ] The expensive forward is inside `eqx.filter_jit` / `jax.jit`, not eager
 - [ ] No `Module.__call__` / heavy op in a bare Python per-item loop
-- [ ] One jit wraps the largest pure block; no tiny-jit soup, no per-call lambdas
+- [ ] One jit wraps the largest pure block; defined **at module scope** (never inside a per-call function/method body, loop, or fresh lambda/partial)
 - [ ] Independent same-shape elements vmapped (chunked if the batch OOMs)
 - [ ] Sequential state loops are `lax.scan`, not Python-unrolled
 - [ ] No per-call Python scalar crossing the jit boundary (pass `jnp.asarray`)
 - [ ] `static=True` only on real config; weights/data stay traced
 - [ ] Benchmarked warm, same-GPU, same-process, with `block_until_ready`
 - [ ] Gated on your task metric within tolerance, NOT bit-equality
-- [ ] `JAX_LOG_COMPILES=1` shows a single compile, not per-call retraces
+- [ ] Programmatic compile counter (`jax_log_compiles`) asserts `compiles_during_timed == 0` during warm timing
 
 ## Related Skills
 
