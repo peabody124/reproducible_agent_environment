@@ -657,6 +657,29 @@ Because every one of these degrades to a *warning*, promote it in CI:
 `warnings.filterwarnings("error", message="Some donated buffers")`. Otherwise a sharding change
 silently removes an optimisation you are still budgeting memory for.
 
+### `jax_log_compiles` misses `pmap` — use `jax.monitoring` and normalize `_device_put_sharded` vs. `'i'`-mesh
+
+**[M]** Under modern JAX (`>= 0.4.30` / `0.10+`), `jax_log_compiles=True` does **not** emit log
+records for `jax.pmap` compilations. Always attach a `jax.monitoring` listener on
+`"/jax/core/compile/backend_compile_duration"` (`rae-jax-profiling` §10) to count every `jit`,
+`pjit`, `shard_map`, and `pmap` backend compile.
+
+Furthermore, legacy `jax.device_put_replicated(x, devs)` tags leaves with
+`NamedSharding(mesh={'_device_put_sharded': N})`, whereas `jax.pmap(..., axis_name='i')` returns
+leaves with `NamedSharding(mesh={'i': N})`:
+- **Epoch-2 recompile:** Epoch 1 compiles `pmap` for `_device_put_sharded` inputs, and Epoch 2
+  recompiles the entire `pmap` step (`~40–60 s`) because the carry returned by Epoch 1 now has
+  mesh `'i'`.
+- **Every-eval recompile with `donate_argnums`:** If a single-device evaluator uses
+  `@functools.partial(jax.jit, donate_argnums=(0,))` on `eval_state` while consuming unreplicated
+  parameters from `training_state`, any leaf whose sharding flips between `_device_put_sharded`
+  and `'i'` across calls causes the evaluator to **recompile on every single evaluation**
+  (`~30 s` × `100` evals = `50 min` wasted).
+- **Fix:** Normalize initial replicated state through a 1-step `pmap(lambda s: s, axis_name='i')`
+  identity (or construct all arrays on a single explicit `Mesh`), strip weak types, and commit
+  unreplicated evaluator inputs via `unreplicate_to_single_device` (§1.2) before calling any
+  `donate_argnums` evaluator.
+
 ### Catch accidental host round-trips with the transfer guard
 
 [`jax.transfer_guard`](https://docs.jax.dev/en/latest/transfer_guard.html) **[C]** takes

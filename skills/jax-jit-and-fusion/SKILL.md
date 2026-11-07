@@ -276,21 +276,25 @@ confounds — same hardware, warm, synchronized:
    retrace or function-local `@jit` rebuild, not steady-state compute
    (→ `jax-memory-and-retracing`).
 
-## Pre-flight Checklist for a Hot Inference Path
+## Pre-flight Checklist for a Hot Inference or Training Path
 
 - [ ] The expensive forward is inside `eqx.filter_jit` / `jax.jit`, not eager
 - [ ] No `Module.__call__` / heavy op in a bare Python per-item loop
 - [ ] One jit wraps the largest pure block; defined **at module scope** (never inside a per-call function/method body, loop, or fresh lambda/partial)
 - [ ] Independent same-shape elements vmapped (chunked if the batch OOMs)
-- [ ] Sequential state loops are `lax.scan`, not Python-unrolled
+- [ ] Sequential state loops are `lax.scan`, not Python-unrolled; state-independent gathers, goal encodings, and PRNG splits are **hoisted outside `lax.scan` as `xs`** (`rae-jax-profiling` §11)
+- [ ] Multi-step training/collection loops fuse $K \in [20, 100]$ iterations + on-device ring-buffer updates (`dynamic_update_slice_in_dim`) inside one `@eqx.filter_jit(donate="all")` `lax.scan` (`rae-jax-profiling` §12)
+- [ ] Mixed-precision MLP hidden layers set **`preferred_element_type=jnp.bfloat16`** (not `float32`) so backward cotangent GEMMs (`dX`, `dW`) stay on `bf16` tensor cores while master weights, normalizers, state integrators, heads, and losses stay `float32` (`rae-jax-profiling` §8)
+- [ ] Kinematic tree Jacobians use **`@jax.custom_jvp` with a static binary ancestor mask** and `Precision.HIGHEST` on $3\times 3$ matmuls rather than `jax.jacfwd` through the tree recurrence (`rae-jax-profiling` §9)
 - [ ] No per-call Python scalar crossing the jit boundary (pass `jnp.asarray`)
 - [ ] `static=True` only on real config; weights/data stay traced
 - [ ] Benchmarked warm, same-GPU, same-process, with `block_until_ready`
 - [ ] Gated on your task metric within tolerance, NOT bit-equality
-- [ ] Programmatic compile counter (`jax_log_compiles`) asserts `compiles_during_timed == 0` during warm timing
+- [ ] Programmatic compile counter (`jax_log_compiles` + `jax.monitoring` listener on `"/jax/core/compile/backend_compile_duration"`) asserts `compiles_during_timed == 0` during warm timing
 
 ## Related Skills
 
+- `rae-jax-profiling` — canonical RAE operational checklist covering `preferred_element_type=jnp.bfloat16` backward GEMMs (§8), `@jax.custom_jvp` analytic tree Jacobians with `Precision.HIGHEST` (§9), `jax.monitoring` `pmap` recompile detection & sharding-flip fixes (§10), loop-invariant `lax.scan` hoisting & 1-GEMM unrolled BPTT weight gradients (§11), and multi-iteration `lax.scan` program granularity + persistent cache hygiene (§12).
 - `jax-memory-and-retracing` — the complement to this skill. Fusion buys speed but
   **raises peak memory** (a wide `vmap`/jit materializes all activations at once →
   OOM; chunk it) and a mis-set boundary can **retrace** (a static scalar/shape that
